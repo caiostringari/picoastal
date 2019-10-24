@@ -7,6 +7,10 @@ coastal monitoring system based on single board computers and FLIR
 This a continuation and update to the system deployed at the Figure 8 pools
 site, which was detailed in [this](https://www.mdpi.com/2072-4292/10/1/11) paper and was operational for over an year.
 
+The image below was captured at Boomerang Beach (New South Wales) earlier this year with a very similar similar set-up.
+
+![](doc/boomerang.jpg)
+
 # 1 Hardware
 
 ## 1.1 Computer Board
@@ -21,6 +25,8 @@ The components of the system are:
 4. [16Gb+ SD card](https://www.raspberrypi.org/documentation/installation/sd-cards.md)
 5. Keyboard
 6. Mouse
+7. [Optional] Battery bank
+7. [Optional] Solar panel
 
 **Note:** the 7in display case mentioned in the link above is not compatible with the
 Raspberry Pi model 4 B. At the time of writing there seems not to be such a case
@@ -30,12 +36,17 @@ Assembly should be straight forward but if in doubt, watch this video:
 
 [![](doc/SettingupyourRaspberryPi.png)](https://www.raspberrypi.org/help/quick-start-guide/2/)
 
+After assembly, you should have something similar to the system below.
+
 ## 1.2 Machine Vision Camera
 
 Our camera of choice is the [Flea 3 USB3 3.2 MP](https://www.flir.com/products/flea3-usb3/) model. However, the implementation provided here should work with any FLIR machine
 vision USB3 camera.
 
 For this project, we used a [Tamron 8mm lens](https://www.flir.fr/products/tamron-8mm-11.8inch-c-mount-lens/). Note that you will need a C to CS mount adaptor if your camera has a CS mount and your lens has a C mount.
+
+![](doc/full_system.png)
+
 
 # 2 Software
 
