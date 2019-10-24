@@ -22,12 +22,13 @@ The components of the system are:
 5. Keyboard
 6. Mouse
 
-Note: the 7in display case mentioned in the link above is not compatible with the
+**Note:** the 7in display case mentioned in the link above is not compatible with the
 Raspberry Pi model 4 B. At the time of writing there seems not to be such a case
 for the Pi model 4.
 
-Assembly should be straight forward but if in doubt, consult [this](https://www.raspberrypi.org/help/quick-start-guide/2/)
-guide.
+Assembly should be straight forward but if in doubt, watch this video:
+
+[![](doc/SettingupyourRaspberryPi.png)](https://www.raspberrypi.org/help/quick-start-guide/2/)
 
 ## Machine Vision Camera
 
@@ -86,7 +87,7 @@ sudo apt install libusb-1.0-0 libpcre3-dev
 
 ## FLIR Spinnaker Setup
 
-(Spinnaker)[https://www.flir.com/products/spinnaker-sdk/] is the software responsible for interfacing the camera and the computer.
+[Spinnaker](https://www.flir.com/products/spinnaker-sdk/) is the software responsible for interfacing the camera and the computer.
 Download Spinnaker from [here](https://flir.app.boxcn.net/v/SpinnakerSDK).
 
 Open the folder where you downloaded Spinnaker and decompress the file.
@@ -137,6 +138,29 @@ on the left.
 ![](doc/spinview.png)
 
 We will not use Spinview in this project but it is a useful tool to debug your camera. Please check Spinnaker documentation regarding Spinview usage.
+
+## Python
+
+Python comes preinstalled with Ubuntu Mate. Only make sure you are using python 3.7.
+
+Before installing FLIR's interface, make sure the following dependencies are met:
+
+```bash
+python3.7 -m pip install --upgrade --user numpy matplotlib Pillow==5.2.0
+```
+
+Download FLIR's python wheel from [https://flir.app.boxcn.net/v/SpinnakerSDK/folder/74731091944](here).
+
+```bash
+sudo python3.7 -m pip install spinnaker_python-1.26.0.31-cp37-cp37m-linux_aarch64.whl
+```
+
+Finally, install [OpenCV](https://pypi.org/project/opencv-python/).
+
+```bash
+sudo python3.7 -m pip install opencv-python opencv-contrib-python
+```
+
 
 # 3 - Image Capture Configuration File
 
