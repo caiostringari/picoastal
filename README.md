@@ -36,7 +36,6 @@ Assembly should be straight forward but if in doubt, watch this video:
 
 [![](doc/SettingupyourRaspberryPi.png)](https://www.raspberrypi.org/help/quick-start-guide/2/)
 
-After assembly, you should have something similar to the system below.
 
 ## 1.2 Machine Vision Camera
 
@@ -44,6 +43,8 @@ Our camera of choice is the [Flea 3 USB3 3.2 MP](https://www.flir.com/products/f
 vision USB3 camera.
 
 For this project, we used a [Tamron 8mm lens](https://www.flir.fr/products/tamron-8mm-11.8inch-c-mount-lens/). Note that you will need a C to CS mount adaptor if your camera has a CS mount and your lens has a C mount.
+
+After assembly, you should have something similar to the system below.
 
 ![](doc/full_system.png)
 
