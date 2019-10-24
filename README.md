@@ -7,9 +7,9 @@ coastal monitoring system based on single board computers and FLIR
 This a continuation and update to the system deployed at the Figure 8 pools
 site, which was detailed in [this](https://www.mdpi.com/2072-4292/10/1/11) paper and was operational for over an year.
 
-# 1 - Hardware
+# 1 Hardware
 
-## Computer Board
+## 1.1 Computer Board
 
 This project has been developed using a Raspberry Pi Model 3 B. Better results
 may be achieved using the new Raspberry Pi 4.
@@ -30,22 +30,22 @@ Assembly should be straight forward but if in doubt, watch this video:
 
 [![](doc/SettingupyourRaspberryPi.png)](https://www.raspberrypi.org/help/quick-start-guide/2/)
 
-## Machine Vision Camera
+## 1.2 Machine Vision Camera
 
 Our camera of choice is the [Flea 3 USB3 3.2 MP](https://www.flir.com/products/flea3-usb3/) model. However, the implementation provided here should work with any FLIR machine
 vision USB3 camera.
 
 For this project, we used a [Tamron 8mm lens](https://www.flir.fr/products/tamron-8mm-11.8inch-c-mount-lens/). Note that you will need a C to CS mount adaptor if your camera has a CS mount and your lens has a C mount.
 
-# 2 - Software
+# 2 Software
 
-## Operating System (OS)
+## 2.1 Operating System (OS)
 
 FLIR recommends Ubuntu for working with their cameras. Unfortunately,
 the full version of Ubuntu is too demanding to run on the Raspberry Pi.
 Therefore, we recommend [Ubuntu Mate](https://www.google.com).
 
-### Instalation
+### 2.1.1 Installation
 
 On a separate computer,
 
@@ -60,7 +60,7 @@ correctly, the system will reboot and you will be greeted by the welcome screen.
 
 ![](doc/mate_welcome.png)
 
-## Dependencies
+## 2.2 FLIR's Dependencies
 
 Before installing FLIR's software, there are several package dependencies that
 need to be installed.
@@ -85,7 +85,7 @@ Now install the required dependencies:
 sudo apt install libusb-1.0-0 libpcre3-dev
 ```
 
-## FLIR Spinnaker Setup
+## 2.3 FLIR Spinnaker Setup
 
 [Spinnaker](https://www.flir.com/products/spinnaker-sdk/) is the software responsible for interfacing the camera and the computer.
 Download Spinnaker from [here](https://flir.app.boxcn.net/v/SpinnakerSDK).
@@ -139,7 +139,7 @@ on the left.
 
 We will not use Spinview in this project but it is a useful tool to debug your camera. Please check Spinnaker documentation regarding Spinview usage.
 
-## Python
+## 2.4 PySpin
 
 Python comes preinstalled with Ubuntu Mate. Only make sure you are using python 3.7.
 
@@ -162,10 +162,10 @@ sudo python3.7 -m pip install opencv-python opencv-contrib-python
 ```
 
 
-# 3 - Image Capture Configuration File
+# 3 Image Capture Configuration File
 
 To be defined
 
-# 4 - Required improvements
+# 4 Required improvements
 
 1. Add the ability to handle more than one camera
