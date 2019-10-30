@@ -219,6 +219,7 @@ The configuration file to drive a capture cycle is in JSON format:
         "offset_y": 236,
         "capture_hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
         "image_format": "jpeg",
+        "stream_size": [800, 600],
         "notify": true
     }
 }
@@ -235,7 +236,9 @@ Explanation of the parameters above:
 - ```width```: The width of the frame in pixels.
 - ```offset_x```: Offset in the x-direction from the sensor start.
 - ```offset_y```: Offset in the y-direction from the sensor start.
+- ```capture_hours```: Capture hours. If outside these hours, do not grab any frames.
 - ```image_format```: To which format to write the frames.
+- ```stream_size```: Size of the window when displaying the video stream in the screen.
 - ```notify```: if ```true``` will send an email with latest captured frame. See note below.
 
 
@@ -252,9 +255,34 @@ cd ~
 git clone https://github.com/caiostringari/PiCoastal.git picoastal
 ```
 
-## 4.2 Displaying the camera stream.
+## 4.1 Displaying the camera stream.
 
-Coming soon.
+This is useful to point the camera in the right direction, to set the focus, and
+aperture.
+
+To launch the stream do:
+
+```bash
+cd ~/picoastal
+python src/capture.py -i capture.json > capture.log &
+```
+
+It is also useful to create a desktop shortcut to this script so that you don't need to
+use the terminal every time.
+
+Open ```pluma``` or ```nano``` text editor and enter the following:
+
+```
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=true
+Exec=bash python ~/picoastal/src/stream.py -i ~/picoastal/src/capture.json
+Name=PiCoastal Stream
+Comment=PiCoastal Stream
+Icon=~/picoastal/doc/camera.png
+```
+Save the file in your ```Desktop``` folder.
 
 ## 4.2 Single capture cycle
 
