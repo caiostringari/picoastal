@@ -11,6 +11,7 @@
         "offset_y": 236,
         "capture_hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
         "image_format": "jpeg",
+        "stream_size": [800, 600],
         "notify": true
     }
 }

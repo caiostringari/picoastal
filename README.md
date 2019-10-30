@@ -264,7 +264,7 @@ To launch the stream do:
 
 ```bash
 cd ~/picoastal
-python src/capture.py -i capture.json > capture.log &
+python src/stream.py -i capture.json > stream.log &
 ```
 
 It is also useful to create a desktop shortcut to this script so that you don't need to
