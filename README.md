@@ -15,7 +15,30 @@ year with a very similar similar set-up to the one described in this repository.
 
 # Table of Contents
 
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
+- [Introduction](#introduction)
+- [Table of Contents](#table-of-contents)
+- [1. Hardware](#1-hardware)
+	- [1.1. Computer Board](#11-computer-board)
+	- [1.2. Machine Vision Camera](#12-machine-vision-camera)
+- [2. Software](#2-software)
+	- [2.1. Operating System (OS)](#21-operating-system-os)
+		- [2.1.1. Installation](#211-installation)
+	- [2.2. Installing FLIR's Dependencies](#22-installing-flirs-dependencies)
+	- [2.3. FLIR Spinnaker Setup](#23-flir-spinnaker-setup)
+	- [2.4. PySpin](#24-pyspin)
+- [3. Image Capture Configuration File](#3-image-capture-configuration-file)
+	- [3.1. Notifications Configuration](#31-notifications-configuration)
+- [4. Capturing Frames](#4-capturing-frames)
+	- [4.1. Displaying the Camera Stream.](#41-displaying-the-camera-stream)
+	- [4.2. Single Capture Cycle](#42-single-capture-cycle)
+	- [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
+- [5. Post Processing](#5-post-processing)
+	- [5.1. Average frame](#51-average-frame)
+- [6. Required Improvements <a name="improvements"></a>](#6-required-improvements-a-nameimprovementsa)
+
+<!-- /TOC -->
 
 # 1. Hardware
 
@@ -272,7 +295,7 @@ aperture.
 To launch the stream do:
 
 ```bash
-cd ~/picoastal
+cd ~/pi
 python3 src/stream.py -i capture.json > stream.log &
 ```
 
@@ -298,7 +321,7 @@ Save the file in your ```Desktop``` folder.
 The main capture program is [capture.py](src/capture.py). To run a single capture cycle, do:
 
 ```bash
-cd ~/picoastal
+cd ~/pi
 python3 src/capture.py -i capture.json > capture.log &
 ```
 ## 4.3. Scheduling Capture Cycles
