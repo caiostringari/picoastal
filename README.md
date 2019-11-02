@@ -15,8 +15,6 @@ year with a very similar similar set-up to the one described in this repository.
 
 # Table of Contents
 
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
-
 - [Introduction](#introduction)
 - [Table of Contents](#table-of-contents)
 - [1. Hardware](#1-hardware)
@@ -24,34 +22,19 @@ year with a very similar similar set-up to the one described in this repository.
 	- [1.2. Machine Vision Camera](#12-machine-vision-camera)
 - [2. Software](#2-software)
 	- [2.1. Operating System (OS)](#21-operating-system-os)
-		- [2.1.1. Installation](#211-installation)
 	- [2.2. Installing FLIR's Dependencies](#22-installing-flirs-dependencies)
 	- [2.3. FLIR Spinnaker Setup](#23-flir-spinnaker-setup)
 	- [2.4. PySpin](#24-pyspin)
-- [make sure python is available system-wide](#make-sure-python-is-available-system-wide)
 - [3. Image Capture Configuration File](#3-image-capture-configuration-file)
 	- [3.1. Notifications Configuration](#31-notifications-configuration)
 - [4. Capturing Frames](#4-capturing-frames)
 	- [4.1. Displaying the Camera Stream.](#41-displaying-the-camera-stream)
 	- [4.2. Single Capture Cycle](#42-single-capture-cycle)
 	- [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
-- [/bin/bash](#binbash)
-- [This is the main capture script controler](#this-is-the-main-capture-script-controler)
-- [defines where your code is located](#defines-where-your-code-is-located)
-- [this is where your python install in](#this-is-where-your-python-install-in)
-- [get the current date](#get-the-current-date)
-- [your configuration file](#your-configuration-file)
-- [your email configuration](#your-email-configuration)
-- [change to current work directory](#change-to-current-work-directory)
-- [current cycle log file](#current-cycle-log-file)
-- [call the capture script](#call-the-capture-script)
-- [echo $(<$log)](#echo-log)
-- [call the notification](#call-the-notification)
 - [5. Post Processing](#5-post-processing)
 - [6. Future Improvements <a name="improvements"></a>](#6-future-improvements-a-nameimprovementsa)
 - [7. Disclaimer](#7-disclaimer)
 
-<!-- /TOC -->
 
 This tutorial assumes that you have some familiarity with the Linux command line
 and at least some basic understanding of python programming.
