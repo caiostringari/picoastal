@@ -4,12 +4,12 @@
     },
     "parameters": {
         "frame_rate": 2,
-        "capture_duration": 20,
+        "capture_duration": 1,
         "height": 1080,
         "width": 1920,
         "offset_x": 80,
         "offset_y": 236,
-        "capture_hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+        "capture_hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20],
         "image_format": "jpeg",
         "stream_size": [800, 600],
         "notify": true

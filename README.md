@@ -28,17 +28,33 @@ year with a very similar similar set-up to the one described in this repository.
 	- [2.2. Installing FLIR's Dependencies](#22-installing-flirs-dependencies)
 	- [2.3. FLIR Spinnaker Setup](#23-flir-spinnaker-setup)
 	- [2.4. PySpin](#24-pyspin)
+- [make sure python is available system-wide](#make-sure-python-is-available-system-wide)
 - [3. Image Capture Configuration File](#3-image-capture-configuration-file)
 	- [3.1. Notifications Configuration](#31-notifications-configuration)
 - [4. Capturing Frames](#4-capturing-frames)
 	- [4.1. Displaying the Camera Stream.](#41-displaying-the-camera-stream)
 	- [4.2. Single Capture Cycle](#42-single-capture-cycle)
 	- [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
+- [/bin/bash](#binbash)
+- [This is the main capture script controler](#this-is-the-main-capture-script-controler)
+- [defines where your code is located](#defines-where-your-code-is-located)
+- [this is where your python install in](#this-is-where-your-python-install-in)
+- [get the current date](#get-the-current-date)
+- [your configuration file](#your-configuration-file)
+- [your email configuration](#your-email-configuration)
+- [change to current work directory](#change-to-current-work-directory)
+- [current cycle log file](#current-cycle-log-file)
+- [call the capture script](#call-the-capture-script)
+- [echo $(<$log)](#echo-log)
+- [call the notification](#call-the-notification)
 - [5. Post Processing](#5-post-processing)
-	- [5.1. Average frame](#51-average-frame)
-- [6. Required Improvements <a name="improvements"></a>](#6-required-improvements-a-nameimprovementsa)
+- [6. Future Improvements <a name="improvements"></a>](#6-future-improvements-a-nameimprovementsa)
+- [7. Disclaimer](#7-disclaimer)
 
 <!-- /TOC -->
+
+This tutorial assumes that you have some familiarity with the Linux command line
+and at least some basic understanding of python programming.
 
 # 1. Hardware
 
@@ -54,7 +70,8 @@ The components of the system are:
 4. [16Gb+ SD card](https://www.raspberrypi.org/documentation/installation/sd-cards.md)
 5. Keyboard
 6. Mouse
-7. External storage. In this case a 16Gb USB stick.
+7. External storage. In this case a 32 USB stick.
+8. 4G moden for email notifications.
 8. [Optional] Battery bank
 9. [Optional] Solar panel
 
@@ -199,7 +216,7 @@ Install the dependencies:
 sudo apt install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
 ```
 
-Compile. This will take a long time on the Raspberry Pi, go grab another coffee.
+Now compile python. This will take a long time on the Raspberry Pi, go grab another coffee.
 
 ```bash
 cd ~
@@ -209,14 +226,15 @@ cd Python-3.7.0
 ./configure --prefix=/opt/python --enable-optimizations
 make -j 4
 sudo make install
+# make sure python is available system-wide
 sudo ln -s /opt/python/bin/* /usr/local/bin
 sudo ldconfig
-
 ```
+
 Before installing FLIR's python interface, make sure the following dependencies are met:
 
 ```bash
-python3 -m pip install --upgrade numpy matplotlib Pillow==5.2.0
+sudo python3 -m pip install --upgrade numpy matplotlib Pillow==5.2.0 natsort
 ```
 
 Install [OpenCV](https://pypi.org/project/opencv-python/).
@@ -238,7 +256,7 @@ The configuration file to drive a capture cycle is in JSON format:
 ```json
 {
     "data": {
-        "output": "/media/picoastal/capture/"
+        "output": "/media/pi/capture/"
     },
     "parameters": {
         "frame_rate": 2,
@@ -249,7 +267,7 @@ The configuration file to drive a capture cycle is in JSON format:
         "offset_y": 236,
         "capture_hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
         "image_format": "jpeg",
-        "stream_size": [800, 600],
+        "stream_size": [400, 300],
         "notify": true
     }
 }
@@ -276,7 +294,37 @@ camera operation takes place.
 
 ## 3.1. Notifications Configuration
 
-To be defined.
+**Warning**: This will require that you store a ```gmail``` user name and password in
+plain text in your system. I strongly recommend to use an accounted that you
+create exclusively for using the cameras.
+
+After creating the account, create a hidden file named ".gmail" in your home
+folder with the login and password.
+
+```
+cd ~
+nano .gmail
+```
+
+Add the following contents:
+
+```json
+{
+    "credentials": {
+        "login": "some.login@gmail.com",
+				"destination": "some.email@gmail.com",
+        "password": "somepassword"
+    },
+    "options": {
+        "send_log": true,
+        "send_last_frame": true
+    }
+}
+```
+
+To save and exit use ```crtl+o``` + ```crtl+x```.
+
+Make sure to change gmail's security settings to allow you to send emails using python.
 
 # 4. Capturing Frames
 
@@ -295,14 +343,17 @@ aperture.
 To launch the stream do:
 
 ```bash
-cd ~/pi
+cd ~/picoastal
 python3 src/stream.py -i capture.json > stream.log &
 ```
 
 It is also useful to create a desktop shortcut to this script so that you don't need to
 use the terminal every time.
 
-Open ```pluma``` or ```nano``` text editor and enter the following:
+```bash
+cd ~/Desktop
+nano stream.desktop
+```
 
 ```
 [Desktop Entry]
@@ -314,7 +365,8 @@ Name=PiCoastal Stream
 Comment=PiCoastal Stream
 Icon=/home/pi/picoastal/doc/camera.png
 ```
-Save the file in your ```Desktop``` folder.
+
+To save and exit use ```crtl+o``` + ```crtl+x```.
 
 ## 4.2. Single Capture Cycle
 
@@ -326,30 +378,84 @@ python3 src/capture.py -i capture.json > capture.log &
 ```
 ## 4.3. Scheduling Capture Cycles
 
-The recommend way to schedule jobs is using ```cron```. To add a new job do:
+The recommend way to schedule jobs is using ```cron```.
+
+First we need to create a ```bash``` script that will call all the commands we
+need need within a single capture cycle. One [example](src/cycle.json) would be:
+
+```bash
+#/bin/bash
+# This is the main capture script controler
+
+# defines where your code is located
+workdir="/home/pi/picoastal/src/"
+echo "Current work dir is : "$workdir
+
+# this is where your python install in
+export PATH="/opt/python/bin/:$PATH"
+
+# get the current date
+date=$(date)
+datestr=$(date +'%Y%m%d_%H%M')
+echo "Current date is : "$date
+
+# your configuration file
+cfg="/home/pi/picoastal/src/capture.json"
+echo "Capture config file is : "$cfg
+
+# your email configuration
+email="/home/pi/.gmail"
+echo "Email config file is : "$email
+
+# change to current work directory
+cd $workdir
+
+# current cycle log file
+mkdir -p /home/pi/logs/
+log="/home/pi/logs/picoastal_"$datestr".log"
+echo "Log file is : "$log
+
+# call the capture script
+script=capture.py
+echo "Calling script : "$script
+python3 $workdir$script -cfg $cfg > $log 2>&1
+# echo $(<$log)
+
+# call the notification
+script=notify.py
+attachemnt=$(tail -n 1 $log)
+echo $attachemnt
+echo "Calling script : "$script
+python3 $workdir$script -cfg $email -log $log -a $attachemnt
+```
+
+
+To add a new job to cron, do:
 
 ```bash
 crontab -e
 ```
 
-If this is your first time using ```crontab```, you will be asked to chose an
+If this is your first time using ```crontab```, you will be asked to chose a
 text editor. I recommend using ```nano```. Add this line to the end of the file:
 
 ```
-0 * * * * python3 /home/pi/picoastal/src/capture.py -i /home/pi/picoastal/src/capture.json > /home/pi/picoastal/src/capture.log 2>&1
+0 * * * * bash /home/picoastal/src/cycle.sh
 ```
 
-To save and exit use ```crtl+o``` + ```crtl+o```.
+To save and exit use ```crtl+o``` + ```crtl+x```.
 
 # 5. Post Processing
 
-Post processing is usually to computationally expensive to run to the Raspberry Pi.
+Post processing is usually too computationally expensive to run on the Raspberry Pi.
 However, some tools will be available here.
 
-**TODO**: Add tools
+**TODO**: Add tools.
 
-## 5.1. Average frame
-
-# 6. Required Improvements <a name="improvements"></a>
+# 6. Future Improvements <a name="improvements"></a>
 
 1. Add the ability to handle more than one camera
+
+# 7. Disclaimer
+
+There is no warranty for the program, to the extent permitted by applicable law except when otherwise stated in writing the copyright holders and/or other parties provide the program “as is” without warranty of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. the entire risk as to the quality and performance of the program is with you. should the program prove defective, you assume the cost of all necessary servicing, repair or correction.
