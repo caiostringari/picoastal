@@ -13,9 +13,35 @@ year with a very similar similar set-up to the one described in this repository.
 
 ![](doc/boomerang.jpg)
 
-# 1 Hardware
+# Table of Contents
 
-## 1.1 Computer Board
+- [Introduction](#introduction)
+- [Table of Contents](#table-of-contents)
+- [1. Hardware](#1-hardware)
+	- [1.1. Computer Board](#11-computer-board)
+	- [1.2. Machine Vision Camera](#12-machine-vision-camera)
+- [2. Software](#2-software)
+	- [2.1. Operating System (OS)](#21-operating-system-os)
+	- [2.2. Installing FLIR's Dependencies](#22-installing-flirs-dependencies)
+	- [2.3. FLIR Spinnaker Setup](#23-flir-spinnaker-setup)
+	- [2.4. PySpin](#24-pyspin)
+- [3. Image Capture Configuration File](#3-image-capture-configuration-file)
+	- [3.1. Notifications Configuration](#31-notifications-configuration)
+- [4. Capturing Frames](#4-capturing-frames)
+	- [4.1. Displaying the Camera Stream](#41-displaying-the-camera-stream)
+	- [4.2. Single Capture Cycle](#42-single-capture-cycle)
+	- [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
+- [5. Post Processing](#5-post-processing)
+- [6. Future Improvements <a name="improvements"></a>](#6-future-improvements-a-nameimprovementsa)
+- [7. Disclaimer](#7-disclaimer)
+
+
+This tutorial assumes that you have some familiarity with the Linux command line
+and at least some basic understanding of python programming.
+
+# 1. Hardware
+
+## 1.1. Computer Board
 
 This project has been developed using a Raspberry Pi Model 3 B. Better results
 may be achieved using the new Raspberry Pi 4 or a NVIDIA Jetson board.
@@ -27,7 +53,8 @@ The components of the system are:
 4. [16Gb+ SD card](https://www.raspberrypi.org/documentation/installation/sd-cards.md)
 5. Keyboard
 6. Mouse
-7. External storage. In this case a 16Gb USB stick.
+7. External storage. In this case a 32 USB stick.
+8. 4G moden for email notifications.
 8. [Optional] Battery bank
 9. [Optional] Solar panel
 
@@ -41,7 +68,7 @@ the Raspberry Pi Foundation:
 [![](doc/SettingupyourRaspberryPi.png)](https://www.raspberrypi.org/help/quick-start-guide/2/)
 
 
-## 1.2 Machine Vision Camera
+## 1.2. Machine Vision Camera
 
 Our camera of choice is the [Flea 3 USB3 3.2 MP](https://www.flir.com/products/flea3-usb3/) model. The implementation provided here should also work with
 any FLIR machine vision USB3 camera.
@@ -53,15 +80,15 @@ After assembly, you should have something similar to the system below.
 ![](doc/full_system.png)
 
 
-# 2 Software
+# 2. Software
 
-## 2.1 Operating System (OS)
+## 2.1. Operating System (OS)
 
 FLIR recommends Ubuntu for working with their cameras. Unfortunately,
 the full version of Ubuntu is too demanding to run on the Raspberry Pi 3.
 Therefore, we recommend [Ubuntu Mate](https://www.google.com).
 
-### 2.1.1 Installation
+### 2.1.1. Installation
 
 On a separate computer,
 
@@ -74,9 +101,11 @@ If everything worked, you will be greeted by Ubuntu Mate's installer. Simply
 follow the installer's instructions and finish the install. If everything goes
 correctly, the system will reboot and you will be greeted by the welcome screen.
 
+For this tutorial, we only created one user named *pi*.
+
 ![](doc/mate_welcome.png)
 
-## 2.2 FLIR's Dependencies
+## 2.2. Installing FLIR's Dependencies
 
 Before installing FLIR's software, there are several package dependencies that
 need to be installed.
@@ -106,7 +135,7 @@ Finally, install GIT in order to be able to clone this repository.
 sudo apt install git
 ```
 
-## 2.3 FLIR Spinnaker Setup
+## 2.3. FLIR Spinnaker Setup
 
 [Spinnaker](https://www.flir.com/products/spinnaker-sdk/) is the software responsible for interfacing the camera and the computer.
 Download Spinnaker from [here](https://flir.app.boxcn.net/v/SpinnakerSDK).
@@ -160,7 +189,7 @@ on the left.
 
 We will not use Spinview in this project but it is a useful tool to debug your camera. Please check Spinnaker documentation regarding Spinview usage.
 
-## 2.4 PySpin
+## 2.4. PySpin
 
 It is recommend to use python 3.7 with PySpin. Unfortunately, python 3.7 does not come preinstalled with Ubuntu Mate. You will need to install it from the source:
 
@@ -170,45 +199,47 @@ Install the dependencies:
 sudo apt install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
 ```
 
-Compile. This will take a long time on the Raspberry Pi, go grab another coffee.
+Now compile python. This will take a long time on the Raspberry Pi, go grab another coffee.
 
 ```bash
+cd ~
 wget https://www.python.org/ftp/python/3.7.5/Python-3.7.5.tar.xz
 tar xf Python-3.7.5.tar.xz
 cd Python-3.7.0
 ./configure --prefix=/opt/python --enable-optimizations
 make -j 4
-make install
+sudo make install
+# make sure python is available system-wide
+sudo ln -s /opt/python/bin/* /usr/local/bin
+sudo ldconfig
 ```
-*TODO: Finish python installation guide.*
 
 Before installing FLIR's python interface, make sure the following dependencies are met:
 
 ```bash
-python3.7 -m pip install --upgrade --user numpy matplotlib Pillow==5.2.0
+sudo python3 -m pip install --upgrade numpy matplotlib Pillow==5.2.0 natsort
 ```
 
-Download FLIR's python wheel from [https://flir.app.boxcn.net/v/SpinnakerSDK/folder/74731091944](here).
+Install [OpenCV](https://pypi.org/project/opencv-python/).
 
 ```bash
-sudo python3.7 -m pip install spinnaker_python-1.26.0.31-cp37-cp37m-linux_aarch64.whl
+sudo python3 -m pip install opencv-python opencv-contrib-python
 ```
 
-Finally, install [OpenCV](https://pypi.org/project/opencv-python/).
+Finally, download FLIR's python wheel from [here](https://flir.app.boxcn.net/v/SpinnakerSDK/folder/74731091944) and install the wheel.
 
 ```bash
-sudo python3.7 -m pip install opencv-python opencv-contrib-python
+sudo python3 -m pip install spinnaker_python-1.26.0.31-cp37-cp37m-linux_aarch64.whl
 ```
 
-
-# 3 Image Capture Configuration File
+# 3. Image Capture Configuration File
 
 The configuration file to drive a capture cycle is in JSON format:
 
 ```json
 {
     "data": {
-        "output": "/media/picoastal/capture/"
+        "output": "/media/pi/capture/"
     },
     "parameters": {
         "frame_rate": 2,
@@ -219,7 +250,7 @@ The configuration file to drive a capture cycle is in JSON format:
         "offset_y": 236,
         "capture_hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
         "image_format": "jpeg",
-        "stream_size": [800, 600],
+        "stream_size": [400, 300],
         "notify": true
     }
 }
@@ -241,12 +272,44 @@ Explanation of the parameters above:
 - ```stream_size```: Size of the window when displaying the video stream in the screen.
 - ```notify```: if ```true``` will send an email with latest captured frame. See note below.
 
+This file can be save anywhere in the system and will be read any time a
+camera operation takes place.
 
-## 3.1 Notifications configuration
+## 3.1. Notifications Configuration
 
-To be defined.
+**Warning**: This will require that you store a ```gmail``` user name and password in
+plain text in your system. I strongly recommend to use an accounted that you
+create exclusively for using the cameras.
 
-# 4 Capturing frames
+After creating the account, create a hidden file named ".gmail" in your home
+folder with the login and password.
+
+```
+cd ~
+nano .gmail
+```
+
+Add the following contents:
+
+```json
+{
+    "credentials": {
+        "login": "some.login@gmail.com",
+				"destination": "some.email@gmail.com",
+        "password": "somepassword"
+    },
+    "options": {
+        "send_log": true,
+        "send_last_frame": true
+    }
+}
+```
+
+To save and exit use ```crtl+o``` + ```crtl+x```.
+
+Make sure to change gmail's security settings to allow you to send emails using python.
+
+# 4. Capturing Frames
 
 First, make sure you have the appropriate code. Clone this repository with:
 
@@ -255,7 +318,7 @@ cd ~
 git clone https://github.com/caiostringari/PiCoastal.git picoastal
 ```
 
-## 4.1 Displaying the camera stream.
+## 4.1. Displaying the Camera Stream
 
 This is useful to point the camera in the right direction, to set the focus, and
 aperture.
@@ -264,38 +327,118 @@ To launch the stream do:
 
 ```bash
 cd ~/picoastal
-python src/stream.py -i capture.json > stream.log &
+python3 src/stream.py -i capture.json > stream.log &
 ```
 
 It is also useful to create a desktop shortcut to this script so that you don't need to
 use the terminal every time.
 
-Open ```pluma``` or ```nano``` text editor and enter the following:
+```bash
+cd ~/Desktop
+nano stream.desktop
+```
 
 ```
 [Desktop Entry]
 Version=1.0
 Type=Application
 Terminal=true
-Exec=bash python ~/picoastal/src/stream.py -i ~/picoastal/src/capture.json
+Exec=python /home/pi/picoastal/src/stream.py -i /home/pi/picoastal/src/capture.json
 Name=PiCoastal Stream
 Comment=PiCoastal Stream
-Icon=~/picoastal/doc/camera.png
+Icon=/home/pi/picoastal/doc/camera.png
 ```
-Save the file in your ```Desktop``` folder.
 
-## 4.2 Single capture cycle
+To save and exit use ```crtl+o``` + ```crtl+x```.
+
+## 4.2. Single Capture Cycle
 
 The main capture program is [capture.py](src/capture.py). To run a single capture cycle, do:
 
 ```bash
-cd ~/picoastal
-python src/capture.py -i capture.json > capture.log &
+cd ~/pi
+python3 src/capture.py -i capture.json > capture.log &
 ```
-## 4.3 Scheduling capture cycles
+## 4.3. Scheduling Capture Cycles
 
-Coming soon.
+The recommend way to schedule jobs is using ```cron```.
 
-# 5 Required improvements
+First we need to create a ```bash``` script that will call all the commands we
+need need within a single capture cycle. One [example](src/cycle.json) would be:
+
+```bash
+#/bin/bash
+# This is the main capture script controler
+
+# defines where your code is located
+workdir="/home/pi/picoastal/src/"
+echo "Current work dir is : "$workdir
+
+# this is where your python install in
+export PATH="/opt/python/bin/:$PATH"
+
+# get the current date
+date=$(date)
+datestr=$(date +'%Y%m%d_%H%M')
+echo "Current date is : "$date
+
+# your configuration file
+cfg="/home/pi/picoastal/src/capture.json"
+echo "Capture config file is : "$cfg
+
+# your email configuration
+email="/home/pi/.gmail"
+echo "Email config file is : "$email
+
+# change to current work directory
+cd $workdir
+
+# current cycle log file
+mkdir -p /home/pi/logs/
+log="/home/pi/logs/picoastal_"$datestr".log"
+echo "Log file is : "$log
+
+# call the capture script
+script=capture.py
+echo "Calling script : "$script
+python3 $workdir$script -cfg $cfg > $log 2>&1
+# echo $(<$log)
+
+# call the notification
+script=notify.py
+attachemnt=$(tail -n 1 $log)
+echo $attachemnt
+echo "Calling script : "$script
+python3 $workdir$script -cfg $email -log $log -a $attachemnt
+```
+
+
+To add a new job to cron, do:
+
+```bash
+crontab -e
+```
+
+If this is your first time using ```crontab```, you will be asked to chose a
+text editor. I recommend using ```nano```. Add this line to the end of the file:
+
+```
+0 * * * * bash /home/picoastal/src/cycle.sh
+```
+
+To save and exit use ```crtl+o``` + ```crtl+x```.
+
+# 5. Post Processing
+
+Post processing is usually too computationally expensive to run on the Raspberry Pi.
+However, some tools will be available here.
+
+**TODO**: Add tools.
+
+# 6. Future Improvements <a name="improvements"></a>
 
 1. Add the ability to handle more than one camera
+
+# 7. Disclaimer
+
+There is no warranty for the program, to the extent permitted by applicable law except when otherwise stated in writing the copyright holders and/or other parties provide the program “as is” without warranty of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. the entire risk as to the quality and performance of the program is with you. should the program prove defective, you assume the cost of all necessary servicing, repair or correction.

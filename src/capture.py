@@ -83,6 +83,11 @@ def set_camera_parameters(cam, nodemap, nodemap_tldevice, fps=5, height=1080,
 
         # *** Frame rate ***
 
+        # allow to set frqme rate
+        node_acquisition_fps_auto = PySpin.CEnumerationPtr(
+                    nodemap.GetNode("AcquisitionFrameRateAuto"))
+        node_acquisition_fps_auto.SetIntValue(0)
+
         # get the current frame rate
         i = cam.AcquisitionFrameRate.GetValue()
         print("Current frame rate: %d " % i)

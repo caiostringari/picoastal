@@ -3,15 +3,15 @@
         "output": "/home/stringari/capture/"
     },
     "parameters": {
-        "frame_rate": 2,
+        "frame_rate": 5,
         "capture_duration": 20,
         "height": 1080,
         "width": 1920,
         "offset_x": 80,
         "offset_y": 236,
-        "capture_hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+        "capture_hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
         "image_format": "jpeg",
-        "stream_size": [800, 600],
+        "stream_size": [540, 480],
         "notify": true
     }
 }

@@ -87,11 +87,16 @@ def set_camera_parameters(cam, nodemap, nodemap_tldevice, fps=5, height=1080,
 
         # *** Frame rate ***
 
+        # allow to set frqme rate
+        node_acquisition_fps_auto = PySpin.CEnumerationPtr(
+                    nodemap.GetNode("AcquisitionFrameRateAuto"))
+        node_acquisition_fps_auto.SetIntValue(0)
+
         # get the current frame rate
         i = cam.AcquisitionFrameRate.GetValue()
         print("Current frame rate: %d " % i)
         # set the new frame rate
-        cam.AcquisitionFrameRate.SetValue(fps)
+        cam.AcquisitionFrameRate.SetValue(int(fps))
         i = cam.AcquisitionFrameRate()
         print("Frame rate set to: %d " % i)
 
@@ -300,7 +305,7 @@ def acquire_images(cam, nodemap, nodemap_tldevice):
                     image_data = cv2.resize(image_data, (stream_width,
                                                          stream_height))
                     cv2.imshow("Camera stream - press 'q' to quit.",
-                               image_data)
+                               cv2.cvtColor(image_data, cv2.COLOR_RGB2BGR))
                     if cv2.waitKey(1) & 0xFF == ord("q"):
                         break
 
