@@ -28,7 +28,7 @@ year with a very similar similar set-up to the one described in this repository.
 - [3. Image Capture Configuration File](#3-image-capture-configuration-file)
 	- [3.1. Notifications Configuration](#31-notifications-configuration)
 - [4. Capturing Frames](#4-capturing-frames)
-	- [4.1. Displaying the Camera Stream](#41-displaying-the-camera-stream)
+	- [4.1. Displaying the Camera Stream.](#41-displaying-the-camera-stream)
 	- [4.2. Single Capture Cycle](#42-single-capture-cycle)
 	- [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
 - [5. Post Processing](#5-post-processing)
@@ -318,7 +318,7 @@ cd ~
 git clone https://github.com/caiostringari/PiCoastal.git picoastal
 ```
 
-## 4.1. Displaying the Camera Stream
+## 4.1. Displaying the Camera Stream.
 
 This is useful to point the camera in the right direction, to set the focus, and
 aperture.

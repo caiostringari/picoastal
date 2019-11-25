@@ -42,6 +42,10 @@ import os
 import sys
 import subprocess
 
+# files
+from glob import glob
+from natsort import natsorted
+
 # dates
 import datetime
 
@@ -542,6 +546,10 @@ def main():
         result &= run_single_camera(cam, cfg)
         print("\nCamera %d example complete... \n" % i)
         print("My work is done!")
+
+        # print the last frame save, this simplify the notification script
+        print("\nLast frame saved:")
+        print(natsorted(glob(OUTPATH+"/*"))[-1])
 
     # Release reference to camera
     # NOTE: Unlike the C++ examples, we cannot rely on pointer objects
