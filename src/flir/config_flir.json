@@ -1,0 +1,22 @@
+{
+    "data": {
+        "output": "test/",
+        "format": "jpeg",
+        "hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+    },
+    "capture": {
+        "duration": 10,
+        "framerate": 2,
+        "resolution": [1920, 1080],
+        "offset": [80, 236]
+    },
+    "stream": {        
+        "framerate": 10,
+        "resolution": [640, 480]
+    },
+    "post_processing": {
+        "notify": true,
+        "average": false,
+        "deviation": false
+    }
+}

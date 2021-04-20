@@ -34,8 +34,6 @@
 
 # This example has been modified by Caio Stringari for the PiCoastal Project.
 
-# This scrip only streams camera data to the screen.
-
 # - Fixed all PEP8 issues.
 # - Add a JSON config file that has options to set frame rate,
 #   capture interval, image ROI, dx, dy and more.
@@ -44,14 +42,16 @@ import os
 import sys
 import subprocess
 
+# files
+from glob import glob
+from natsort import natsorted
+
 # dates
 import datetime
 
 # arguments
 import json
 import argparse
-
-import cv2
 
 # PySpin
 import PySpin
@@ -96,7 +96,7 @@ def set_camera_parameters(cam, nodemap, nodemap_tldevice, fps=5, height=1080,
         i = cam.AcquisitionFrameRate.GetValue()
         print("Current frame rate: %d " % i)
         # set the new frame rate
-        cam.AcquisitionFrameRate.SetValue(int(fps))
+        cam.AcquisitionFrameRate.SetValue(fps)
         i = cam.AcquisitionFrameRate()
         print("Frame rate set to: %d " % i)
 
@@ -244,8 +244,8 @@ def acquire_images(cam, nodemap, nodemap_tldevice):
             # print("\nDevice serial number retrieved as %s...\n" %
             #  device_serial_number)
 
-        # Retrieve, and display
-        while (True):
+        # Retrieve, convert, and save images
+        for i in range(NUM_IMAGES):
             try:
 
                 # Retrieve next received image
@@ -298,16 +298,25 @@ def acquire_images(cam, nodemap, nodemap_tldevice):
                     # optional parameter.
                     image_converted = image_result.Convert(
                         PySpin.PixelFormat_RGB8, PySpin.HQ_LINEAR)
-                    image_data = image_converted.GetNDArray()
-                    image_data = image_data.reshape(height, width, 3)
 
-                    # Display the resulting frame
-                    image_data = cv2.resize(image_data, (stream_width,
-                                                         stream_height))
-                    cv2.imshow("Camera stream - press 'q' to quit.",
-                               cv2.cvtColor(image_data, cv2.COLOR_RGB2BGR))
-                    if cv2.waitKey(1) & 0xFF == ord("q"):
-                        break
+                    # Create a unique filename
+                    now = today.strftime("%Y%m%d_%H00")
+                    if device_serial_number:
+                        filename = "{}-{}-{}.{}".format(device_serial_number,
+                                                        now, str(i).zfill(6),
+                                                        EXT)
+                    else:  # if serial number is empty
+                        filename = "{}-{}.{}".format(now, str(i).zfill(6),
+                                                     EXT)
+
+                    # Save image
+                    #
+                    # *** NOTES ***
+                    # The standard practice of the examples is to use device
+                    # serial numbers to keep images of one device from
+                    # overwriting those of another.
+                    image_converted.Save(os.path.join(OUTPATH, filename))
+                    print("Image saved at %s" % filename)
 
                     #  Release image
                     #
@@ -328,7 +337,6 @@ def acquire_images(cam, nodemap, nodemap_tldevice):
         # Ending acquisition appropriately helps ensure that devices clean up
         # properly and do not need to be power-cycled to maintain integrity.
         cam.EndAcquisition()
-        cv2.destroyAllWindows()
 
     except PySpin.SpinnakerException as ex:
         print("Error: %s" % ex)
@@ -403,11 +411,11 @@ def run_single_camera(cam, cfg):
 
         # Set camera parameters
         result &= set_camera_parameters(cam, nodemap, nodemap_tldevice,
-                                        fps=cfg["parameters"]["frame_rate"],
-                                        height=cfg["parameters"]["height"],
-                                        width=cfg["parameters"]["width"],
-                                        offsetx=cfg["parameters"]["offset_x"],
-                                        offsety=cfg["parameters"]["offset_y"])
+                                        fps=cfg["capture"]["framerate"],
+                                        height=cfg["capture"]["resolution"][1],
+                                        width=cfg["capture"]["resolution"][0],
+                                        offsetx=cfg["capture"]["offset"][0],
+                                        offsety=cfg["capture"]["offset"][1])
 
         # Acquire images
         result &= acquire_images(cam, nodemap, nodemap_tldevice)
@@ -441,15 +449,56 @@ def main():
     else:
         raise IOError("No such file or directory \"{}\"".format(inp))
 
-    # frame rate
-    fps = cfg["parameters"]["frame_rate"]
+    # get the date
+    global today
+    today = datetime.datetime.now()
 
-    # window size - Note thei are global variables
-    size = cfg["parameters"]["stream_size"]
-    global stream_width
-    global stream_height
-    stream_width = int(size[0])
-    stream_height = int(size[1])
+    # check if current hour is in capture hours
+    hour = today.hour
+    capture_hours = cfg["data"]["hours"]
+    if hour in capture_hours:
+        print("Sunlight hours. Starting capture cycle.\n")
+        print("Capture starting at {}:\n".format(today))
+    else:
+        print("Not enough sunlight at {}. Not starting capture cycle.".format(
+            today))
+        sys.exit()
+
+    # read the output path
+    main_path = cfg["data"]["output"]
+
+    # current cycle output path - note that this is a global variable
+    global OUTPATH
+    OUTPATH = os.path.join(main_path, today.strftime("%Y%m%d_%H00")) + "/"
+    if not os.path.isdir(OUTPATH):
+        subprocess.call("mkdir -p {}".format(OUTPATH), shell=True)
+
+    # compute the number of images to capture based on frame rate
+    # and capture duration
+    fps = cfg["capture"]["framerate"]
+    duration = cfg["capture"]["duration"]
+
+    # number of images to grab - note that this is a global variable
+    global NUM_IMAGES
+    NUM_IMAGES = fps * duration
+
+    # image extenstion - note that this is a global variable
+    global EXT
+    EXT = cfg["data"]["format"]
+
+    # Since this application saves images in the current folder
+    # we must ensure that we have permission to write to this folder.
+    # If we do not have permission, fail right away.
+    try:
+        test_file = open(os.path.join(OUTPATH, "test.txt"), "w+")
+    except IOError:
+        print("Unable to write to current directory."
+              "Please check permissions.")
+        # input("Press Enter to exit...")
+        return False
+
+    test_file.close()
+    os.remove(test_file.name)
 
     result = True
 
@@ -497,6 +546,10 @@ def main():
         result &= run_single_camera(cam, cfg)
         print("\nCamera %d example complete... \n" % i)
         print("My work is done!")
+
+        # print the last frame save, this simplify the notification script
+        print("\nLast frame saved:")
+        print(natsorted(glob(OUTPATH+"/*"))[-1])
 
     # Release reference to camera
     # NOTE: Unlike the C++ examples, we cannot rely on pointer objects
