@@ -95,7 +95,6 @@ def run_single_camera(cfg):
         print("\n -- Extracting frames -- \n")
         out = os.path.join(cfg["data"]["output"],
                            start.strftime("%Y%m%d_%H%M"))
-        fname = "20210420_172857.h264"
         extract_frames(fname, out, start, cfg["data"]["format"])
 
 
