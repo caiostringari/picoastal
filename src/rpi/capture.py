@@ -1,6 +1,6 @@
 """
 # SCRIPT   : capture.py
-# POURPOSE : Capture a sequence of frames record using the 
+# POURPOSE : Capture a sequence of frames record using the
 #            raspberry pi HQ camera.
 # AUTHOR   : Caio Eadi Stringari
 # DATE     : 14/04/2021
@@ -40,7 +40,7 @@ def filenames():
 def set_camera_parameters(cfg):
     """
     Set camera parameters.
-    
+
     All values come from the dict generated from the JSON file.
 
     :param cfg: JSON instance.
@@ -51,24 +51,23 @@ def set_camera_parameters(cfg):
     # set camera resolution [width x height]
     camera = PiCamera()
     camera.resolution = cfg["capture"]["resolution"]
-    
+
     # set camera frame rate [Hz]
     camera.framerate = cfg["capture"]["framerate"]
 
     # exposure mode
     camera.exposure_mode = cfg["exposure"]["mode"]
-    
+
     if cfg["exposure"]["set_iso"]:
         camera.iso = cfg["exposure"]["iso"]
 
     return camera
-    
+
 
 def run_single_camera(cfg):
 
     # set camera parameters
-    camera = set_camera_parameters(cfg)
-
+    # camera = set_camera_parameters(cfg)
 
     # warm-up the camera
     print(" -- warming up the camera (2 seconds) --")
@@ -77,7 +76,7 @@ def run_single_camera(cfg):
     # capture frames from the camera
     start = datetime.datetime.now()
     duration = cfg["capture"]["duration"] # total number of seconds
-    
+
     print("\n capturing {} seconds".format(duration))
     print("\n capture started at {} --".format(start))
     fname = os.path.join(cfg["data"]["output"],
@@ -90,10 +89,45 @@ def run_single_camera(cfg):
     camera.stop_recording()
     end = datetime.datetime.now()
     print(" capture finished at {} --".format(end))
-   
+
+    if cfg["post_processing"]["extract_frames"]:
+
+        print("\n -- Extracting frames -- \n")
+        out = os.path.join(cfg["data"]["output"],
+                           start.strftime("%Y%m%d_%H%M"))
+        fname = "20210420_172857.h264"
+        extract_frames(fname, out, start, cfg["data"]["format"])
+
+
+def extract_frames(inp, out, date, ext):
+    """
+    Extract all frames from the encoded stream.
+
+    :param inp: Input h.264 file.
+    :type inp: str
+    :param out: Output path.
+    :type out: str
+    :param date: Capture date.
+    :type date: datetime.datetime
+    :return: None
+    :rtype: None
+    """
+    # make sure output path exists
+    os.makedirs(out, exist_ok=True)
+
+    # call ffmpeg
+    dt = date.strftime("%Y%m%d_%H%M")
+    cmd = "ffmpeg -i {} {}/000000-{}_%06d.{}".format(inp, out, dt, ext)
+    subprocess.call(cmd, shell=True)
+
+    # list all frames
+    files = natsorted(glob(out + "/*.{}".format(ext)))
+    print("\nExtracted files are:\n")
+    for file in files:
+        print(file)
 
 def main():
-   
+
     # verify if the configuraton file exists
     # if it does, then read it
     # else, stop
@@ -122,7 +156,7 @@ def main():
     os.makedirs(cfg["data"]["output"], exist_ok=True)
 
     run_single_camera(cfg)
-    
+
 
 if __name__ == "__main__":
 
@@ -142,5 +176,3 @@ if __name__ == "__main__":
 
     # call the main program
     main()
-
-

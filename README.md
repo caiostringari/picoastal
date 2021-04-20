@@ -1,7 +1,7 @@
 # Introduction
 
 This project aims to provide the information needed to build an ARGUS-like
-coastal monitoring system based on the Raspberry Pi computer board. Both the Raspeberry Pi High Quality Camera and FLIR machine vision cameras are supported.
+coastal monitoring system based on the Raspberry Pi computer board. Both the Raspberry Pi High Quality Camera and FLIR machine vision cameras are supported.
 
 This a continuation and update to the system deployed at the Figure 8 pools
 site, which was detailed in [this paper](https://www.mdpi.com/2072-4292/10/1/11)
@@ -73,16 +73,7 @@ the Raspberry Pi Foundation:
 
 [![](doc/SettingupyourRaspberryPi.png)](https://www.raspberrypi.org/help/quick-start-guide/2/)
 
-
-## 1.2 Raspberry Pi High Quality Camera (2021 update)
-
-In 2020 the Raspberry Pi foundation realeased the [High Quality Camera](https://www.raspberrypi.org/products/raspberry-pi-high-quality-camera/) for the Pi. This camera allows to use any type of lens which is perfect for our project. This camera costs around 75 USD and is much easier to use and program the FLIR cameras. Everything is also open-source. Because the hardware only costs a fraction of the FLIR's camera, do not expect the quality.
-
-<!-- todo: fix this ugly screen shot -->
-[![](doc/HQPiCamera.png)](https://www.youtube.com/watch?v=YzEZvTwO7tA)
-
-
-## 1.3. FLIR Machine Vision Camera
+## 1.2. FLIR Machine Vision Camera
 
 Our camera of choice is the [Flea 3 USB3 3.2 MP](https://www.flir.com/products/flea3-usb3/) model. The implementation provided here should also work with
 any FLIR machine vision USB3 camera.
@@ -91,7 +82,14 @@ For this project, we used a [Tamron 8mm lens](https://www.flir.fr/products/tamro
 
 After assembly, you should have something similar to the system below.
 
-<!-- ![](doc/full_system.png) -->
+[![](doc/FLIRFlea.png)]()
+
+
+## 1.3 Raspberry Pi High Quality Camera (2021 update)
+
+In 2020, the Raspberry Pi foundation released the [High Quality Camera](https://www.raspberrypi.org/products/raspberry-pi-high-quality-camera/) for the Pi. This camera allows to use any type of lens which is perfect for our project. This camera costs around 75 USD and is much easier to use and program than the FLIR cameras. Everything is also open-source. Because the hardware only costs a fraction of the FLIR's camera, do not expect the same quality.
+
+[![](doc/HQPiCamera.png)](https://www.youtube.com/watch?v=YzEZvTwO7tA)
 
 
 # 2. Software
@@ -102,9 +100,9 @@ FLIR recommends Ubuntu for working with their cameras. Unfortunately,
 the full version of Ubuntu is too demanding to run on the Raspberry Pi 4.
 Therefore, we recommend [Ubuntu Mate](https://www.google.com) 20.04.
 
-If you are interest in using only Raspberry Pi's HQ camera, [Raspberry Pi OS](https://www.raspberrypi.org/software/) is a much lighter option and usually comes pre-installed with the board. Note that FLIR's cameras won't play well with Raspberry Pi OS (at least in my experience).
+If you are interest in using only Raspberry Pi's HQ camera, [Raspberry Pi OS](https://www.raspberrypi.org/software/) is a much lighter option and usually comes pre-installed with the board. Note that FLIR's cameras won't play well with Raspberry Pi OS (at least in our experience).
 
-### 2.1.1. Installation
+### 2.1.1. Ubuntu Mate Installation
 
 On a separate computer,
 
@@ -121,7 +119,9 @@ For this tutorial, we only created one user named *pi*.
 
 ![](doc/mate_welcome.png)
 
-## 2.2. Installing FLIR's SDK Dependencies
+## 2.2. FLIR's SDK
+
+## 2.2.1. Dependencies
 
 Before installing FLIR's software, there are several package dependencies that
 need to be installed.
@@ -151,7 +151,7 @@ Finally, install GIT in order to be able to clone this repository.
 sudo apt install git
 ```
 
-## 2.3. FLIR Spinnaker Setup
+## 2.2.2. Spinnaker Install
 
 [Spinnaker](https://www.flir.com/products/spinnaker-sdk/) is the software responsible for interfacing the camera and the computer.
 Download Spinnaker from [here](https://flir.app.boxcn.net/v/SpinnakerSDK). Make sure to download the correct version (Ubuntu 20.04, armhf)
@@ -223,11 +223,11 @@ on the left.
 
 ![](doc/spinview.png)
 
-We will not use Spinview in this project but it is a useful tool to debug your camera. Please check Spinnaker documentation regarding Spinview usage.
+We will not use Spinview too much in this project but it is a useful tool to debug your camera. Please check Spinnaker documentation regarding Spinview usage.
 
-## 2.4. PySpin
+## 2.2.3. PySpin
 
-It is recommend to use python 3.8 with PySpin. Fortunatelly, it comes pre-installed with Ubuntu Mate.
+It is recommend to use python 3.8 with PySpin. Fortunately, it comes pre-installed with Ubuntu Mate.
 
 Before installing FLIR's python interface, make sure the following dependencies are met:
 
@@ -239,14 +239,13 @@ sudo apt install python3-pip
 sudo python3 -m pip install --upgrade pip numpy matplotlib Pillow==7.0.0 natsort
 ```
 
-<!-- todo: fix this -->
 Install [OpenCV](https://pypi.org/project/opencv-python/).
 
 ```bash
 sudo apt install python3-opencv
 ```
 
-Finally, download FLIR's python wheel from [here](https://flir.app.boxcn.net/v/SpinnakerSDK/folder/74731091944) and install it.
+Finally, download FLIR's python wheel from [here](https://flir.app.boxcn.net/v/SpinnakerSDK/) and install it.
 
 ```bash
 sudo python3.8 -m pip install spinnaker_python-2.3.0.77-cp38-cp38-linux_armv7l.whl
@@ -254,7 +253,7 @@ sudo python3.8 -m pip install spinnaker_python-2.3.0.77-cp38-cp38-linux_armv7l.w
 
 # 2.3 Raspberry Pi QH Camera
 
-You probably alredy have everything you need if you installed FLIR's dependencies. If not, just make sure to install everything you need:
+You probably already have everything you need if you installed FLIR's dependencies. If not, just make sure to install everything you need:
 
 ```bash
 sudo python3 -m pip install numpy matplotlib natsort "picamera[array]"
@@ -272,6 +271,7 @@ With this camera, we can actually encode video, so make sure to have the latest 
 sudo apt install x264 ffmpeg
 ```
 
+Much easier!
 
 # 3. Image Capture Configuration File
 
@@ -279,7 +279,7 @@ sudo apt install x264 ffmpeg
 
 The configuration file to drive a capture cycle is in JSON format:
 
-It's very hard to program FLIR cameras, so I will only provide basic options here. You will ne to mannualy add options to `capture.py` in order to expand the options.
+It's very hard to program FLIR's cameras, so I will only provide basic options here. You will need to manually add code to `capture.py` in order to expand the options.
 
 ```json
 {
@@ -309,9 +309,9 @@ It's very hard to program FLIR cameras, so I will only provide basic options her
 This file can be save anywhere in the system and will be read any time a
 camera operation takes place.
 
-## 3.2 Raspeberry Pi QH Camera
+## 3.2 Raspberry Pi HQ Camera
 
-This camera provides a lot more options, such as ISO and exposure mode.
+This camera provides a lot more options, such as ISO and a handy `beach` exposure mode.
 
 ```json
 {
@@ -350,17 +350,35 @@ This camera provides a lot more options, such as ISO and exposure mode.
 
 ### Options
 
-Explanation of the confioguration parameters above:
+Explanation of the configuration parameters above:
 
-- ```output```: The location to where to write the frames. Subfolders will be created based on the hour of the capture cycle.
-- ```framerate```: The capture frequency rate in Hz (which is equivalent to frames per second).
+Streaming and Capturing:
+
+- ```output```: The location to where to write the frames. Sub-folders will be created based on the hour of the capture cycle.
+- ```framerate```: The capture frequency rate in frames per second.
 - ```duration```: Capture cycle duration in seconds.
-- - ```resolution```: Image size for capturing or streaming.
+- ```resolution```: Image size for capturing or streaming.
 - ```offset_x```: Offset in the x-direction from the sensor start [FLIR only].
 - ```offset_y```: Offset in the y-direction from the sensor start [FLIR only].
 - ```capture_hours```: Capture hours. If outside these hours, the camera does not grab any frames.
 - ```image_format```: Which format to write the frames.
-- ```notify```: if ```true``` will send an email with latest captured frame. See note below.
+
+Exposure and ISO:
+
+- ```exposure```: Exposure mode for the HQ camera. Defaults to `beach`.
+- ```set_iso```: Set ISO mode for the HQ camera. Defaults to `false`.
+- ```iso```: Set a manual ISO value for the HQ camera.
+
+`H.264` options:
+- ```quality```: Set stream quality level. Defaults to 25 (high).
+- ```sei```: Enhanced information for `h.264` encoding.
+- ```sps_timing```:  Frame timmings for `h.264` encoding.
+
+Post-processing:
+
+- ```notify```: will send an e-mail (see below).
+- ```average```: will create an average image.
+- ```deviation```: will create the deviation image.
 
 
 ## 3.3. Notifications Configuration
@@ -478,7 +496,7 @@ Icon=/home/pi/picoastal/doc/camera.png
 The recommend way to schedule jobs is using ```cron```.
 
 First we need to create a ```bash``` script that will call all the commands we
-need need within a single capture cycle. One [example](src/cycle.json) would be:
+need need within a single capture cycle. One [example](src/flir/cycle_flir.json) would be:
 
 ```bash
 #/bin/bash
@@ -486,6 +504,9 @@ need need within a single capture cycle. One [example](src/cycle.json) would be:
 
 # create log dir
 mkdir -p "/home/pi/logs/"
+
+# export this variable
+export FLIR_GENTL32_CTI=/opt/spinnaker/lib/flir-gentl/FLIR_GenTL.cti
 
 # defines where your code is located
 workdir="/home/pi/picoastal/src/"
@@ -525,7 +546,6 @@ echo "Calling script : "$script
 python3 $workdir$script -cfg $email -log $log -a $attachemnt
 ```
 
-
 To add a new job to cron, do:
 
 ```bash
@@ -536,7 +556,7 @@ If this is your first time using ```crontab```, you will be asked to chose a
 text editor. I recommend using ```nano```. Add this line to the end of the file:
 
 ```
-0 * * * * bash /home/picoastal/src/cycle.sh
+0 * * * * bash /home/picoastal/src/flir/cycle_flir.sh
 ```
 
 To save and exit use ```crtl+o``` + ```crtl+x```.
@@ -546,17 +566,40 @@ To save and exit use ```crtl+o``` + ```crtl+x```.
 Post processing is usually too computationally expensive to run on the Raspberry Pi.
 However, some tools will be available here.
 
-**TODO**: Add tools.
+## 5.1. Average Image
+
+Coming soon.
+
+## 5.2. Standard Deviation Image
+
+Coming soon.
 
 # 6. Known issues
 
 ## 6.1. FLIR Camera start up
 
-More often than not, the FLIR camera does not start properly and you get a weird black and white image. The only way I found to fix this was to open `spinview` and set this option:
+More often than not, the FLIR camera does not start properly and you get a weird black and white image. The only way I found to fix this was to open `spinview` and set the parameter below to `Auto`:
 
 ![](doc/spinview_issue1.png)
 
-You will need to do this everytime the camera is disconected. 
+You will need to do this every time the camera is disconnected.
+
+## 6.2. `libmmal.so` issue on Ubuntu Mate 20.04
+
+For some reason, the python wrapper for the HQ camera does not link properly to `libmmal.so`. The easiest way to solve this is to download the `.so` file from this repository and replace the bad on on Ubuntu.
+
+
+Make a backup just in case.
+```bash
+sudo cp /usr/lib/arm-linux-gnueabihf/libmmal.so /usr/lib/arm-linux-gnueabihf/libmmal.so.bk
+```
+
+Download [this](lib/libmmal.so) file and replace.
+```bash
+sudo mv libmmal.so /usr/lib/arm-linux-gnueabihf/libmmal.so
+```
+
+This issue does not happen in Raspberry Pi Os.
 
 # 7. Future Improvements
 
