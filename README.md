@@ -27,7 +27,7 @@ year with a very similar similar set-up to the one described in this repository.
   - [2.2.1. Dependencies](#221-dependencies)
   - [2.2.2. Spinnaker Install](#222-spinnaker-install)
   - [2.2.3. PySpin](#223-pyspin)
-- [2.3 Raspberry Pi QH Camera](#23-raspberry-pi-qh-camera)
+- [2.3 Raspberry Pi HQ Camera](#23-raspberry-pi-hq-camera)
 - [3. Image Capture Configuration File](#3-image-capture-configuration-file)
   - [3.1 FLIR Camera](#31-flir-camera)
   - [3.2 Raspberry Pi HQ Camera](#32-raspberry-pi-hq-camera)
@@ -255,7 +255,7 @@ Finally, download FLIR's python wheel from [here](https://flir.app.boxcn.net/v/S
 sudo python3.8 -m pip install spinnaker_python-2.3.0.77-cp38-cp38-linux_armv7l.whl
 ```
 
-# 2.3 Raspberry Pi QH Camera
+# 2.3 Raspberry Pi HQ Camera
 
 You probably already have everything you need if you installed FLIR's dependencies. If not, just make sure to install everything you need:
 
