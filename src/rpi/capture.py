@@ -31,11 +31,6 @@ from picamera.array import PiRGBArray
 # OpenCV
 import cv2
 
-def filenames():
-    frame = 0
-    while frame < frames:
-        yield 'image_%04d.jpg' % frame
-        frame += 1
 
 def set_camera_parameters(cfg):
     """
@@ -67,7 +62,7 @@ def set_camera_parameters(cfg):
 def run_single_camera(cfg):
 
     # set camera parameters
-    # camera = set_camera_parameters(cfg)
+    camera = set_camera_parameters(cfg)
 
     # warm-up the camera
     print(" -- warming up the camera (2 seconds) --")
@@ -115,9 +110,11 @@ def extract_frames(inp, out, date, ext):
     os.makedirs(out, exist_ok=True)
 
     # call ffmpeg
+    print("\n --- Calling FFMPEG ---\n")
     dt = date.strftime("%Y%m%d_%H%M")
-    cmd = "ffmpeg -i {} {}/000000-{}_%06d.{}".format(inp, out, dt, ext)
+    cmd = "ffmpeg -i {} {}/000000-{}_%06d.{} > /dev/null 2>&1".format(inp, out, dt, ext)
     subprocess.call(cmd, shell=True)
+    print("\n --- FFMPEG finished extracting frames ---\n")
 
     # list all frames
     files = natsorted(glob(out + "/*.{}".format(ext)))

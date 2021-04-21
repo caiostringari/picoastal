@@ -18,18 +18,19 @@ year with a very similar similar set-up to the one described in this repository.
 - [Table of Contents](#table-of-contents)
 - [1. Hardware](#1-hardware)
   - [1.1. Computer Board](#11-computer-board)
-  - [1.2 Raspberry Pi High Quality Camera (2021 update)](#12-raspberry-pi-high-quality-camera-2021-update)
-  - [1.3. FLIR Machine Vision Camera](#13-flir-machine-vision-camera)
+  - [1.2. FLIR Machine Vision Camera](#12-flir-machine-vision-camera)
+  - [1.3 Raspberry Pi High Quality Camera (2021 update)](#13-raspberry-pi-high-quality-camera-2021-update)
 - [2. Software](#2-software)
   - [2.1. Operating System (OS)](#21-operating-system-os)
-    - [2.1.1. Installation](#211-installation)
-  - [2.2. Installing FLIR's SDK Dependencies](#22-installing-flirs-sdk-dependencies)
-  - [2.3. FLIR Spinnaker Setup](#23-flir-spinnaker-setup)
-  - [2.4. PySpin](#24-pyspin)
+    - [2.1.1. Ubuntu Mate Installation](#211-ubuntu-mate-installation)
+  - [2.2. FLIR's SDK](#22-flirs-sdk)
+  - [2.2.1. Dependencies](#221-dependencies)
+  - [2.2.2. Spinnaker Install](#222-spinnaker-install)
+  - [2.2.3. PySpin](#223-pyspin)
 - [2.3 Raspberry Pi QH Camera](#23-raspberry-pi-qh-camera)
 - [3. Image Capture Configuration File](#3-image-capture-configuration-file)
   - [3.1 FLIR Camera](#31-flir-camera)
-  - [3.2 Raspeberry Pi QH Camera](#32-raspeberry-pi-qh-camera)
+  - [3.2 Raspberry Pi HQ Camera](#32-raspberry-pi-hq-camera)
     - [Options](#options)
   - [3.3. Notifications Configuration](#33-notifications-configuration)
 - [4. Capturing Frames](#4-capturing-frames)
@@ -40,8 +41,11 @@ year with a very similar similar set-up to the one described in this repository.
   - [4.2. Single Capture Cycle](#42-single-capture-cycle)
   - [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
 - [5. Post Processing](#5-post-processing)
+  - [5.1. Average Image](#51-average-image)
+  - [5.2. Standard Deviation Image](#52-standard-deviation-image)
 - [6. Known issues](#6-known-issues)
   - [6.1. FLIR Camera start up](#61-flir-camera-start-up)
+  - [6.2. `libmmal.so` issue on Ubuntu Mate 20.04](#62-libmmalso-issue-on-ubuntu-mate-2004)
 - [7. Future Improvements](#7-future-improvements)
 - [8. Disclaimer](#8-disclaimer)
 
@@ -197,7 +201,7 @@ nano .bashrc
 Add to the end of the file:
 
 ```
-FLIR_GENTL32_CTI=/opt/spinnaker/lib/flir-gentl/FLIR_GenTL.cti
+export FLIR_GENTL32_CTI=/opt/spinnaker/lib/flir-gentl/FLIR_GenTL.cti
 ```
 
 Reboot your Raspberry Pi and check if it worked with:

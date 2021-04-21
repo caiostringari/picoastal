@@ -1,13 +1,13 @@
 {
     "data": {
-        "output": "/home/stringari/captures/",
+        "output": "/home/pi/captures/",
         "hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
-        "format": "jpg"
+        "format": "png"
     },
     "capture": {
-        "duration": 20,
-        "framerate": 10,
-        "resolution": [1920, 1080]
+        "duration": 10,
+        "framerate": 2,
+        "resolution": [2048, 1024]
     },
     "stream": {
         "framerate": 30,

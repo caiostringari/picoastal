@@ -1,6 +1,9 @@
 #/bin/bash
 # This is the main capture script controler
 
+# export this variable
+export FLIR_GENTL32_CTI=/opt/spinnaker/lib/flir-gentl/FLIR_GenTL.cti
+
 # create log dir
 mkdir -p "/home/pi/logs/"
 
