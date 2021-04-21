@@ -1,4 +1,6 @@
 """
+Capture frames using the Raspberry Pi HQ camera.
+
 # SCRIPT   : capture.py
 # POURPOSE : Capture a sequence of frames record using the
 #            raspberry pi HQ camera.
@@ -70,7 +72,7 @@ def run_single_camera(cfg):
 
     # capture frames from the camera
     start = datetime.datetime.now()
-    duration = cfg["capture"]["duration"] # total number of seconds
+    duration = cfg["capture"]["duration"]  # total number of seconds
 
     print("\n capturing {} seconds".format(duration))
     print("\n capture started at {} --".format(start))
@@ -112,7 +114,8 @@ def extract_frames(inp, out, date, ext):
     # call ffmpeg
     print("\n --- Calling FFMPEG ---\n")
     dt = date.strftime("%Y%m%d_%H%M")
-    cmd = "ffmpeg -i {} {}/000000-{}_%06d.{} > /dev/null 2>&1".format(inp, out, dt, ext)
+    cmd = "ffmpeg -i {} {}/000000-{}_%06d.{} > /dev/null 2>&1".format(
+        inp, out, dt, ext)
     subprocess.call(cmd, shell=True)
     print("\n --- FFMPEG finished extracting frames ---\n")
 
@@ -122,7 +125,9 @@ def extract_frames(inp, out, date, ext):
     for file in files:
         print(file)
 
+
 def main():
+    """Call the main program."""
 
     # verify if the configuraton file exists
     # if it does, then read it
@@ -155,7 +160,6 @@ def main():
 
 
 if __name__ == "__main__":
-
 
     # Argument parser
     parser = argparse.ArgumentParser()

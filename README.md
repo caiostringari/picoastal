@@ -7,7 +7,7 @@ This a continuation and update to the system deployed at the Figure 8 pools
 site, which was detailed in [this paper](https://www.mdpi.com/2072-4292/10/1/11)
 and was operational for over an year.
 
-The image below was captured at Boomerang Beach (New South Wales) earlier this
+The image below was captured at Boomerang Beach (New South Wales) in early 2019
 year with a very similar similar set-up to the one described in this repository.
 
 ![](doc/boomerang.jpg)
@@ -86,7 +86,7 @@ For this project, we used a [Tamron 8mm lens](https://www.flir.fr/products/tamro
 
 After assembly, you should have something similar to the system below.
 
-[![](doc/FLIRFlea.png)]()
+[![](doc/full_system.png)]()
 
 
 ## 1.3 Raspberry Pi High Quality Camera (2021 update)
@@ -567,16 +567,44 @@ To save and exit use ```crtl+o``` + ```crtl+x```.
 
 # 5. Post Processing
 
-Post processing is usually too computationally expensive to run on the Raspberry Pi.
-However, some tools will be available here.
+Post processing is usually too computationally expensive to run on the Raspberry Pi. However, some tools will be available here.
 
 ## 5.1. Average Image
 
-Coming soon.
+To compute an average ([or time exposure](http://www.coastalwiki.org/wiki/Argus_image_types_and_conventions)) image you need to install some extra packages:
 
-## 5.2. Standard Deviation Image
+```bash
+sudo python3 -m pip install scikit-image
+```
 
-Coming soon.
+To compute the average, we use  the [`average.py`](src/average.py) script. Using the sample data provided in `data/boomerang/`:
+
+```bash
+cd ~/picoastal/
+python3 src/average.py -i "data/boomerang" -o "average.png"
+```
+
+The result should look like this:
+
+![](doc/average.png)
+
+## 5.2. Variance Image
+
+To compute an variance image you need to install another extra packages:
+
+```bash
+sudo python3 -m pip install welford
+```
+
+This package allows us to use [Welford's](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance) method and save memory. To compute the variance, we use  the [`variance.py`](src/variance.py) script. Using the sample data provided in `data/boomerang/`:
+
+```bash
+cd ~/picoastal/
+python3 src/variance.py -i "data/boomerang" -o average "variance.png"
+```
+The result should look like this:
+
+![](doc/variance.png)
 
 # 6. Known issues
 
