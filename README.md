@@ -24,25 +24,27 @@ year with a very similar similar set-up to the one described in this repository.
   - [2.1. Operating System (OS)](#21-operating-system-os)
     - [2.1.1. Ubuntu Mate Installation](#211-ubuntu-mate-installation)
   - [2.2. FLIR's SDK](#22-flirs-sdk)
-  - [2.2.1. Dependencies](#221-dependencies)
-  - [2.2.2. Spinnaker Install](#222-spinnaker-install)
-  - [2.2.3. PySpin](#223-pyspin)
-- [2.3 Raspberry Pi HQ Camera](#23-raspberry-pi-hq-camera)
+    - [2.2.1. Dependencies](#221-dependencies)
+    - [2.2.2. Spinnaker Install](#222-spinnaker-install)
+    - [2.2.3. PySpin](#223-pyspin)
+  - [2.3 Raspberry Pi HQ Camera](#23-raspberry-pi-hq-camera)
 - [3. Image Capture Configuration File](#3-image-capture-configuration-file)
   - [3.1 FLIR Camera](#31-flir-camera)
   - [3.2 Raspberry Pi HQ Camera](#32-raspberry-pi-hq-camera)
     - [Options](#options)
-  - [3.3. Notifications Configuration](#33-notifications-configuration)
+  - [3.3. Email Notifications (Optinal)](#33-email-notifications-optinal)
 - [4. Capturing Frames](#4-capturing-frames)
   - [4.1. Displaying the Camera Stream.](#41-displaying-the-camera-stream)
-    - [FLIR](#flir)
-    - [HQ Camera](#hq-camera)
-    - [Desktop icon](#desktop-icon)
+    - [FLIR Camera](#flir-camera)
+    - [Raspberry Pi HQ Camera](#raspberry-pi-hq-camera)
+    - [Desktop icon (Optinal)](#desktop-icon-optinal)
   - [4.2. Single Capture Cycle](#42-single-capture-cycle)
   - [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
 - [5. Post Processing](#5-post-processing)
-  - [5.1. Average Image](#51-average-image)
-  - [5.2. Standard Deviation Image](#52-standard-deviation-image)
+  - [5.1. Average and Variance Images](#51-average-and-variance-images)
+  - [5.2. Brightest and darkest images](#52-brightest-and-darkest-images)
+  - [5.3. Rectification](#53-rectification)
+  - [5.3. Timestacks](#53-timestacks)
 - [6. Known issues](#6-known-issues)
   - [6.1. FLIR Camera start up](#61-flir-camera-start-up)
   - [6.2. `libmmal.so` issue on Ubuntu Mate 20.04](#62-libmmalso-issue-on-ubuntu-mate-2004)
@@ -62,12 +64,12 @@ This project has been developed using a Raspberry Pi Model 4 B with 4Gb of memor
 The components of the system are:
 1. [Raspberry Pi board](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/)
 2. [Raspberry Pi 7in display](https://www.raspberrypi.org/products/raspberry-pi-touch-display/)
-3. [Raspberry Pi display case](https://thepihut.com/products/raspberry-pi-7-touchscreen-display-case-white)
+3. [Raspberry Pi display case](https://www.canakit.com/raspberry-pi-4-lcd-display-case-pi4.html)
 4. [16Gb+ SD card](https://www.raspberrypi.org/documentation/installation/sd-cards.md)
 5. Keyboard
 6. Mouse
-7. External storage. In this case a 32 USB stick.
-8. 4G moden for email notifications.
+7. External storage. In this case a 32Gb USB stick.
+8. [Optional] 4G moden for email notifications.
 9. [Optional] Battery bank
 10. [Optional] Solar panel
 
@@ -125,7 +127,7 @@ For this tutorial, we only created one user named *pi*.
 
 ## 2.2. FLIR's SDK
 
-## 2.2.1. Dependencies
+### 2.2.1. Dependencies
 
 Before installing FLIR's software, there are several package dependencies that
 need to be installed.
@@ -155,7 +157,7 @@ Finally, install GIT in order to be able to clone this repository.
 sudo apt install git
 ```
 
-## 2.2.2. Spinnaker Install
+### 2.2.2. Spinnaker Install
 
 [Spinnaker](https://www.flir.com/products/spinnaker-sdk/) is the software responsible for interfacing the camera and the computer.
 Download Spinnaker from [here](https://flir.app.boxcn.net/v/SpinnakerSDK). Make sure to download the correct version (Ubuntu 20.04, armhf)
@@ -229,7 +231,7 @@ on the left.
 
 We will not use Spinview too much in this project but it is a useful tool to debug your camera. Please check Spinnaker documentation regarding Spinview usage.
 
-## 2.2.3. PySpin
+### 2.2.3. PySpin
 
 It is recommend to use python 3.8 with PySpin. Fortunately, it comes pre-installed with Ubuntu Mate.
 
@@ -255,7 +257,7 @@ Finally, download FLIR's python wheel from [here](https://flir.app.boxcn.net/v/S
 sudo python3.8 -m pip install spinnaker_python-2.3.0.77-cp38-cp38-linux_armv7l.whl
 ```
 
-# 2.3 Raspberry Pi HQ Camera
+## 2.3 Raspberry Pi HQ Camera
 
 You probably already have everything you need if you installed FLIR's dependencies. If not, just make sure to install everything you need:
 
@@ -385,7 +387,7 @@ Post-processing:
 - ```deviation```: will create the deviation image.
 
 
-## 3.3. Notifications Configuration
+## 3.3. Email Notifications (Optinal)
 
 **Warning**: This will require that you store a ```gmail``` user name and password in
 plain text in your system. I strongly recommend to use an accounted that you
@@ -437,18 +439,18 @@ aperture.
 
 To launch the stream do:
 
-### FLIR
+### FLIR Camera
 ```bash
 cd ~/picoastal
 python3 src/flir/stream.py -i config_flir.json > stream.log &
 ```
 
-### HQ Camera
+### Raspberry Pi HQ Camera
 ```bash
 cd ~/picoastal
 python3 src/rpi/stream.py -i config_rpi.json > stream.log &
 ```
-### Desktop icon
+### Desktop icon (Optinal)
 
 It is also useful to create a desktop shortcut to this script so that you don't need to
 use the terminal every time.
