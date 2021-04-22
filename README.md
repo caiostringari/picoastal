@@ -569,26 +569,21 @@ To save and exit use ```crtl+o``` + ```crtl+x```.
 
 Post processing is usually too computationally expensive to run on the Raspberry Pi. However, some tools will be available here.
 
-## 5.1. Average Image
+## 5.1. Average and Variance Images
 
 To compute an average ([or time exposure](http://www.coastalwiki.org/wiki/Argus_image_types_and_conventions)) image you need to install some extra packages:
 
 ```bash
-sudo python3 -m pip install scikit-image
+sudo apt install python3-scipy
+sudo python3 -m pip install scikit-image tqdm
 ```
 
-To compute the average, we use  the [`average.py`](src/average.py) script. Using the sample data provided in `data/boomerang/`:
+To compute the average, we use  the [`average.py`](src/post/average.py) script. Using the sample data provided in `data/boomerang/`:
 
 ```bash
 cd ~/picoastal/
-python3 src/average.py -i "data/boomerang" -o "average.png"
+python3 src/post/average.py -i "data/boomerang" -o "average.png"
 ```
-
-The result should look like this:
-
-![](doc/average.png)
-
-## 5.2. Variance Image
 
 To compute an variance image you need to install another extra packages:
 
@@ -596,15 +591,42 @@ To compute an variance image you need to install another extra packages:
 sudo python3 -m pip install welford
 ```
 
-This package allows us to use [Welford's](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance) method and save memory. To compute the variance, we use  the [`variance.py`](src/variance.py) script. Using the sample data provided in `data/boomerang/`:
+This package allows us to use [Welford's](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance) method and save memory. To compute the variance, we use  the [`variance.py`](src/post/variance.py) script. Using the sample data provided in `data/boomerang/`:
 
 ```bash
 cd ~/picoastal/
-python3 src/variance.py -i "data/boomerang" -o average "variance.png"
+python3 src/post/variance.py -i "data/boomerang" -o "variance.png"
+```
+The results should look like this:
+
+Average                    |  Variance
+:-------------------------:|:-------------------------:
+![](doc/average.png)       |  ![](doc/variance.png)
+
+
+## 5.2. Brightest and darkest images
+
+To find the brightest and darkest images, use the [`variance.py`](src/post/brightest_and_darkest.py) script:
+
+```bash
+cd ~/picoastal/
+python3 src/post/brightest_and_darkest.py -i "data/boomerang" -b "brightest.png" -d "darkest.png"
 ```
 The result should look like this:
 
-![](doc/variance.png)
+Brightest                  |  Darkest
+:-------------------------:|:-------------------------:
+![](doc/brightest.png)     |  ![](doc/darkest.png)
+
+This scripts converts the images to the `HSV` colour space and looks for the images with summed highest and lowest brightness (i.e., the `V` in the `HSV`).
+
+## 5.3. Rectification
+
+Coming soon.
+
+## 5.3. Timestacks
+
+Coming soon.
 
 # 6. Known issues
 
