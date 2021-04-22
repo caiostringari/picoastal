@@ -1,13 +1,13 @@
 {
     "data": {
         "output": "/home/pi/captures/",
-        "hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
-        "format": "png"
+        "hours": [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 , 19],
+        "format": "jpg"
     },
     "capture": {
-        "duration": 10,
-        "framerate": 2,
-        "resolution": [2048, 1024]
+        "duration": 600,
+        "framerate": 5,
+        "resolution": [1920, 1080]
     },
     "stream": {
         "framerate": 30,

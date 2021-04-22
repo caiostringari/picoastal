@@ -1,5 +1,5 @@
 #/bin/bash
-# This is the main capture script controler
+# This is the main capture script controler for the FLIR camera.
 
 # export this variable
 export FLIR_GENTL32_CTI=/opt/spinnaker/lib/flir-gentl/FLIR_GenTL.cti

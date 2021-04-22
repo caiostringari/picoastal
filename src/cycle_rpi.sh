@@ -1,8 +1,8 @@
 #/bin/bash
-# This is the main capture script controler
+# This is the main capture script controler for the HQ camera.
 
 # create log dir
-mkdir -p "/home/pi/logs/"
+mkdir -p "/home/pi/pilogs/"
 
 # defines where your code is located
 workdir="/home/pi/picoastal/src/"
@@ -25,7 +25,7 @@ echo "Email config file is : "$email
 cd $workdir
 
 # current cycle log file
-log="/home/pi/logs/picoastal_"$datestr".log"
+log="/home/pi/pilogs/picoastal_"$datestr".log"
 echo "Log file is : "$log
 
 # call the capture script
@@ -39,4 +39,4 @@ script=notify.py
 attachemnt=$(tail -n 1 $log)
 echo $attachemnt
 echo "Calling script : "$script
-# python3 $workdir$script -cfg $email -log $log -a $attachemnt
+python3 $workdir$script -cfg $email -log $log -a $attachemnt
