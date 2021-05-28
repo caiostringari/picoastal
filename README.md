@@ -567,6 +567,10 @@ text editor. I recommend using ```nano```. Add this line to the end of the file:
 
 To save and exit use ```crtl+o``` + ```crtl+x```.
 
+## 4.4. Controlling the Cameras Remotely
+
+Controlling the cameras remotely is quite easy. All you need to do is to make sure you have [RealVNC](https://www.realvnc.com/en/) installed both in the Raspberry Pi and in your phone. By default, Raspberry Pi Os has VNC installed, on Ubuntu you will need to install it by yourself. Tip: Create a hot spot using a second phone and connect both your main phone and the raspberry to the network to control it in the field.
+
 # 5. Post Processing
 
 Post processing is usually too computationally expensive to run on the Raspberry Pi. However, some tools will be available here.
@@ -657,7 +661,19 @@ sudo mv libmmal.so /usr/lib/arm-linux-gnueabihf/libmmal.so
 
 This issue does not happen in Raspberry Pi Os.
 
-# 7. Future Improvements
+## 6.3 - Upside-down display
+
+The 7' display is upside-down out of the box. To fix this on Ubuntu Mate do:
+
+```bash
+xrand --output DSI-1 --rotate inverted
+```
+
+To make it permanent, open the system configuration panel and search for `display`, and apply system-wide.
+
+![](doc/display_issue.png)
+
+# 7. Future improvements
 
 1. Add the ability to handle more than one camera
 
