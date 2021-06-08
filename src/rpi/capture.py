@@ -120,13 +120,11 @@ def extract_frames(inp, out, date, ext, only_last=False):
 
         print("\n --- Calling FFMPEG (only last frame) ---\n")
         dt = date.strftime("%Y%m%d_%H%M")
-        base = "ffmpeg -sseof -1 -i"
-        cmd = base + " {} -update 1 -q:v 1 {}/last.bmp > /dev/null 2>&1".format(
-            inp, out)
+        cmd = "ffmpeg -i {} -vf \"select=\'eq(n,1)\'\" -vframes 1 {}/first.bmp > /dev/null 2>&1".format(inp, out)
         subprocess.call(cmd, shell=True)
         print("\n --- FFMPEG finished extracting frames ---\n")
-        print("Last frame is:")
-        print(os.path.join(out, "last.bmp"))
+        print("First frame is:")
+        print(os.path.join(out, "first.bmp"))
     else:
         # make sure output path exists
         os.makedirs(out, exist_ok=True)
