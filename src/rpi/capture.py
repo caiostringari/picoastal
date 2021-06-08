@@ -88,14 +88,20 @@ def run_single_camera(cfg):
     print(" capture finished at {} --".format(end))
 
     if cfg["post_processing"]["extract_frames"]:
+        if cfg["post_processing"]["only_last_frame"]:
+            print("\n -- Extracting frames -- \n")
+            out = os.path.join(cfg["data"]["output"],
+                               start.strftime("%Y%m%d_%H%M"))
+            extract_frames(fname, out, start, cfg["data"]["format"],
+                           only_last=True)
+        else:
+            print("\n -- Extracting frames -- \n")
+            out = os.path.join(cfg["data"]["output"],
+                               start.strftime("%Y%m%d_%H%M"))
+            extract_frames(fname, out, start, cfg["data"]["format"])
 
-        print("\n -- Extracting frames -- \n")
-        out = os.path.join(cfg["data"]["output"],
-                           start.strftime("%Y%m%d_%H%M"))
-        extract_frames(fname, out, start, cfg["data"]["format"])
 
-
-def extract_frames(inp, out, date, ext):
+def extract_frames(inp, out, date, ext, only_last=False):
     """
     Extract all frames from the encoded stream.
 
@@ -108,27 +114,38 @@ def extract_frames(inp, out, date, ext):
     :return: None
     :rtype: None
     """
-    # make sure output path exists
-    os.makedirs(out, exist_ok=True)
+    if not only_last:
+        # make sure output path exists
+        os.makedirs(out, exist_ok=True)
 
-    # call ffmpeg
-    print("\n --- Calling FFMPEG ---\n")
-    dt = date.strftime("%Y%m%d_%H%M")
-    cmd = "ffmpeg -i {} {}/000000-{}_%06d.{} > /dev/null 2>&1".format(
-        inp, out, dt, ext)
-    subprocess.call(cmd, shell=True)
-    print("\n --- FFMPEG finished extracting frames ---\n")
+        # call ffmpeg
+        print("\n --- Calling FFMPEG ---\n")
+        dt = date.strftime("%Y%m%d_%H%M")
+        cmd = "ffmpeg -i {} {}/000000-{}_%06d.{} > /dev/null 2>&1".format(
+            inp, out, dt, ext)
+        subprocess.call(cmd, shell=True)
+        print("\n --- FFMPEG finished extracting frames ---\n")
 
-    # list all frames
-    files = natsorted(glob(out + "/*.{}".format(ext)))
-    print("\nExtracted files are:\n")
-    for file in files:
-        print(file)
+        # list all frames
+        files = natsorted(glob(out + "/*.{}".format(ext)))
+        print("\nExtracted files are:\n")
+        for file in files:
+            print(file)
+    else:
+        # make sure output path exists
+        os.makedirs(out, exist_ok=True)
+
+        print("\n --- Calling FFMPEG ---\n")
+        dt = date.strftime("%Y%m%d_%H%M")
+        base = "ffmpeg -sseof -1 -i"
+        cmd = base + " {} -update 1 -q:v 1 last.bmp > /dev/null 2>&1".format(
+            inp)
+        subprocess.call(cmd, shell=True)
+        print("\n --- FFMPEG finished extracting frames ---\n")
 
 
 def main():
     """Call the main program."""
-
     # verify if the configuraton file exists
     # if it does, then read it
     # else, stop

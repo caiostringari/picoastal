@@ -5,7 +5,7 @@
         "format": "jpg"
     },
     "capture": {
-        "duration": 600,
+        "duration": 900,
         "framerate": 5,
         "resolution": [1920, 1080]
     },
@@ -26,8 +26,9 @@
     },
     "post_processing": {
         "extract_frames": true,
+        "only_last_frame": true,
         "notify": true,
-        "average": true,
-        "deviation": true
+        "average": false,
+        "deviation": false
     }
 }
