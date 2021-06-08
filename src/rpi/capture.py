@@ -114,7 +114,18 @@ def extract_frames(inp, out, date, ext, only_last=False):
     :return: None
     :rtype: None
     """
-    if not only_last:
+    if only_last:
+        # make sure output path exists
+        os.makedirs(out, exist_ok=True)
+
+        print("\n --- Calling FFMPEG (only last frame) ---\n")
+        dt = date.strftime("%Y%m%d_%H%M")
+        base = "ffmpeg -sseof -1 -i"
+        cmd = base + " {} -update 1 -q:v 1 last.bmp > /dev/null 2>&1".format(
+            inp)
+        subprocess.call(cmd, shell=True)
+        print("\n --- FFMPEG finished extracting frames ---\n")
+    else:
         # make sure output path exists
         os.makedirs(out, exist_ok=True)
 
@@ -131,18 +142,6 @@ def extract_frames(inp, out, date, ext, only_last=False):
         print("\nExtracted files are:\n")
         for file in files:
             print(file)
-    else:
-        # make sure output path exists
-        os.makedirs(out, exist_ok=True)
-
-        print("\n --- Calling FFMPEG ---\n")
-        dt = date.strftime("%Y%m%d_%H%M")
-        base = "ffmpeg -sseof -1 -i"
-        cmd = base + " {} -update 1 -q:v 1 last.bmp > /dev/null 2>&1".format(
-            inp)
-        subprocess.call(cmd, shell=True)
-        print("\n --- FFMPEG finished extracting frames ---\n")
-
 
 def main():
     """Call the main program."""
