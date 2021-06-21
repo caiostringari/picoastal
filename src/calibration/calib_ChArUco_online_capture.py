@@ -241,4 +241,4 @@ if __name__ == '__main__':
     out["corners"] = all_corners
     out["ids"] = all_ids
     out["last_frame"] = image
-    pickle.dump(out, args.ouput)
+    pickle.dump(out, args.output)
