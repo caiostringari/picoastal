@@ -157,7 +157,7 @@ if __name__ == '__main__':
         squares_x, squares_y, square_length, marker_length, dictionary)
 
     # set camera parameters
-    inp = args.config[0]
+    inp = args.config
     if os.path.isfile(inp):
         with open(inp, "r") as f:
             cfg = json.load(f)
