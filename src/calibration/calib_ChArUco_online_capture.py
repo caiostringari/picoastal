@@ -48,10 +48,10 @@ def set_camera_parameters(cfg):
     """
     # set camera resolution [width x height]
     camera = PiCamera()
-    camera.resolution = cfg["stream"]["resolution"]
+    camera.resolution = cfg["capture"]["resolution"]
 
     # set camera frame rate [Hz]
-    camera.framerate = cfg["stream"]["framerate"]
+    camera.framerate = cfg["resolution"]["framerate"]
 
     # exposure mode
     camera.exposure_mode = cfg["exposure"]["mode"]
@@ -221,7 +221,8 @@ if __name__ == '__main__':
         else:
             pass
 
-        resize = ResizeWithAspectRatio(frame, height=400)
+        height = cfg["resolution"]["framerate"][1]
+        resize = ResizeWithAspectRatio(image, height=400)
         cv2.imshow("Camera calibration, pres 'q' to quit.", resize)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
