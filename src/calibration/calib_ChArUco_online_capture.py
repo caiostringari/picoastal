@@ -72,7 +72,7 @@ if __name__ == '__main__':
     # input configuration file
     parser.add_argument("--config", "-i",
                         action="store",
-                        dest="input",
+                        dest="config",
                         required=True,
                         help="Camera configuration JSON file.",)
 
