@@ -14,6 +14,8 @@ import numpy as np
 
 from time import sleep
 
+import pickle
+
 # PiCamera
 from picamera import PiCamera
 from picamera.array import PiRGBArray
@@ -135,7 +137,7 @@ if __name__ == '__main__':
                         action="store",
                         dest="output",
                         required=True,
-                        help="Output JSON file.",)
+                        help="Output pickle file.",)
 
     args = parser.parse_args()
 
@@ -231,5 +233,12 @@ if __name__ == '__main__':
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    # Destroy any open CV windows
+    # destroy any open CV windows
     cv2.destroyAllWindows()
+
+    # output
+    out = {}
+    out["corners"] = all_corners
+    out["ids"] = all_ids
+    out["last_frame"] = image
+    pickle.dump(out, args.ouput)
