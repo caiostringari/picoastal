@@ -206,7 +206,7 @@ if __name__ == '__main__':
 
                 # draw board on image
                 im_with_board = cv2.aruco.drawDetectedCornersCharuco(
-                    frame, ref_corners, ref_ids, (0, 255, 0))
+                    image, ref_corners, ref_ids, (0, 255, 0))
 
                 # append
                 all_corners.append(ref_corners)
