@@ -187,11 +187,8 @@ if __name__ == '__main__':
         # and occupied/unoccupied text
         image = frame.array
 
-        # read
-        # frame = cv2.imread(image)
-
         # covert to grey scale
-        grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # detect
         corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(
