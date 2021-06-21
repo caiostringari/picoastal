@@ -51,7 +51,7 @@ def set_camera_parameters(cfg):
     camera.resolution = cfg["capture"]["resolution"]
 
     # set camera frame rate [Hz]
-    camera.framerate = cfg["resolution"]["framerate"]
+    camera.framerate = cfg["capture"]["framerate"]
 
     # exposure mode
     camera.exposure_mode = cfg["exposure"]["mode"]
