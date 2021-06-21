@@ -238,7 +238,9 @@ if __name__ == '__main__':
 
     # output
     out = {}
+    outfile = open(args.output, 'wb')
     out["corners"] = all_corners
     out["ids"] = all_ids
-    out["last_frame"] = image
-    pickle.dump(out, args.output)
+    out["last_frame"] = im_with_board
+    pickle.dump(out, outfile)
+    outfile.close()
