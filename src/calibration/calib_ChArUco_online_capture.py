@@ -222,8 +222,12 @@ if __name__ == '__main__':
             pass
 
         height = cfg["stream"]["resolution"][1]
-        resize = ResizeWithAspectRatio(image, height=400)
+        resize = ResizeWithAspectRatio(image, height=height)
         cv2.imshow("Camera calibration, pres 'q' to quit.", resize)
+
+        # clear the stream in preparation for the next frame
+        rawCapture.truncate(0)
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
