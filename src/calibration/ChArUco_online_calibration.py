@@ -269,6 +269,9 @@ if __name__ == '__main__':
     # finalize
     if args.calibrate_on_device:
 
+        print(
+            "\n - Starting calibrateCameraCharuco(), this will take a while.")
+
         # calibrate the camera
         imsize = grey.shape
         retval, mtx, dist, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(
@@ -286,6 +289,18 @@ if __name__ == '__main__':
         pickle.dump(out, outfile)
         outfile.close()
 
+        # display the results
+
+        # undistort
+        h,  w = stream_img.shape[:2]
+        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(
+            mtx, dist, (w, h), 1, (w, h))
+        dst = cv2.undistort(stream_img, mtx, dist, None, newcameramtx)
+        cv2.imshow("Undistorted image", dst)
+        cv2.waitKey(1)
+        cv2.destroyAllWindows()
+
+
     # output the corners and ids.
     else:
         out = {}
@@ -295,3 +310,5 @@ if __name__ == '__main__':
         out["last_frame"] = im_with_board
         pickle.dump(out, outfile)
         outfile.close()
+
+    print("\nMy work is done!\n")
