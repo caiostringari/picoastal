@@ -244,9 +244,14 @@ if __name__ == '__main__':
         else:
             pass
 
+        # image to be displayed
+        if not im_with_board:
+            stream_img = image
+        else:
+            stream_img = im_with_board
         rsize = (int(cfg["stream"]["resolution"][0]),
                  int(cfg["stream"]["resolution"][1]))
-        resized = cv2.resize(im_with_board, rsize,
+        resized = cv2.resize(stream_img, rsize,
                              interpolation=cv2.INTER_LINEAR)
         cv2.imshow("Camera calibration, press 'q' to quit.", resized)
 
