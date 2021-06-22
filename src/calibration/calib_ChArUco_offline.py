@@ -141,8 +141,8 @@ if __name__ == '__main__':
         with open(args.input, 'rb') as f:
             x = pickle.load(f)
 
-        all_corners = x["corners"][0:20]
-        all_ids = x["ids"][0:20]
+        all_corners = x["corners"]
+        all_ids = x["ids"]
 
         frame = x["last_frame"]
         grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
