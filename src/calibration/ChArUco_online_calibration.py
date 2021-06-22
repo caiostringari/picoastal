@@ -126,18 +126,37 @@ if __name__ == '__main__':
                         required=False,
                         help="ArUco Dictionary id.")
 
-    parser.add_argument("--max-images", "-N",
+    parser.add_argument("--max_images", "-N",
                         action="store",
                         dest="max_images",
                         required=False,
-                        default=100,
+                        default=25,
                         help="Maximum number of images to use.",)
+
+    parser.add_argument("--stream_height",
+                        action="store",
+                        dest="stream_height",
+                        required=False,
+                        default=600,
+                        help="Height for the opencv stream window image.",)
+
+    parser.add_argument("--stream_width",
+                        action="store",
+                        dest="stream_width",
+                        required=False,
+                        default=800,
+                        help="Width for the opencv stream window image.",)
 
     parser.add_argument("--output", "-o",
                         action="store",
                         dest="output",
                         required=True,
                         help="Output pickle file.",)
+
+    parser.add_argument("--calibrate_on_device",
+                        action="store_true",
+                        dest="calibrate_on_device",
+                        help="Will calibrate on device, if parsed.",)
 
     args = parser.parse_args()
 
@@ -185,8 +204,8 @@ if __name__ == '__main__':
     for frame in camera.capture_continuous(
             rawCapture, format="bgr", use_video_port=True):
 
-        # grab the raw NumPy array representing the image, then initialize the timestamp
-        # and occupied/unoccupied text
+        # grab the raw NumPy array representing the image, then initialize the
+        # timestamp and occupied/unoccupied text
         image = frame.array
 
         # covert to grey scale
@@ -215,7 +234,9 @@ if __name__ == '__main__':
                 all_ids.append(ref_ids)
 
                 if total_images > max_images:
-                    print("Got all images I needed, breaking the loop.")
+                    print("\n  --> Found all images I needed. "
+                          "Breaking the loop after {} images.".format(
+                              max_images))
                     break
 
                 total_images += 1
@@ -223,9 +244,11 @@ if __name__ == '__main__':
         else:
             pass
 
-        height = cfg["stream"]["resolution"][1]
-        resize = ResizeWithAspectRatio(image, height=height)
-        cv2.imshow("Camera calibration, pres 'q' to quit.", resize)
+        rsize = (int(cfg["stream"]["resolution"][0]),
+                 int(cfg["stream"]["resolution"][1]))
+        resized = cv2.resize(im_with_board, rsize,
+                             interpolation=cv2.INTER_LINEAR)
+        cv2.imshow("Camera calibration, press 'q' to quit.", resized)
 
         # clear the stream in preparation for the next frame
         rawCapture.truncate(0)
@@ -236,11 +259,32 @@ if __name__ == '__main__':
     # destroy any open CV windows
     cv2.destroyAllWindows()
 
-    # output
-    out = {}
-    outfile = open(args.output, 'wb')
-    out["corners"] = all_corners
-    out["ids"] = all_ids
-    out["last_frame"] = im_with_board
-    pickle.dump(out, outfile)
-    outfile.close()
+    # finalize
+    if args.calibrate_on_device:
+
+        # calibrate the camera
+        imsize = grey.shape
+        retval, mtx, dist, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(
+            all_corners, all_ids, board, imsize, None, None)
+
+        # output the results of the calibration
+        out = {}
+        outfile = open(args.output, 'wb')
+        out["retval"] = retval
+        out["camera_matrix"] = mtx
+        out["distortion_coefficients"] = dist
+        out["rotation_vectors"] = dist
+        out["translation_vectors"] = dist
+        out["last_frame"] = im_with_board
+        pickle.dump(out, outfile)
+        outfile.close()
+
+    # output the corners and ids.
+    else:
+        out = {}
+        outfile = open(args.output, 'wb')
+        out["corners"] = all_corners
+        out["ids"] = all_ids
+        out["last_frame"] = im_with_board
+        pickle.dump(out, outfile)
+        outfile.close()
