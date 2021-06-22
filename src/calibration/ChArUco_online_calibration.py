@@ -251,8 +251,8 @@ if __name__ == '__main__':
             stream_img = image
 
         # resize to fit on screen
-        rsize = (int(cfg["stream"]["resolution"][1]),
-                 int(cfg["stream"]["resolution"][0]))
+        rsize = (int(cfg["stream"]["resolution"][0]),
+                 int(cfg["stream"]["resolution"][1]))
         resized = cv2.resize(stream_img, rsize,
                              interpolation=cv2.INTER_LINEAR)
         cv2.imshow("Camera calibration, press 'q' to quit.", resized)
@@ -299,8 +299,8 @@ if __name__ == '__main__':
         dst = cv2.undistort(stream_img, mtx, dist, None, newcameramtx)
         resized = cv2.resize(dst, rsize,
                              interpolation=cv2.INTER_LINEAR)
-        cv2.imshow("Undistorted image", resized)
-        cv2.waitKey(10000)
+        cv2.imshow("Undistorted image. Displaying for 20 seconds.", resized)
+        cv2.waitKey(20000)
         cv2.destroyAllWindows()
 
     # output the corners and ids.
