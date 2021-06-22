@@ -251,8 +251,8 @@ if __name__ == '__main__':
             stream_img = image
 
         # resize to fit on screen
-        rsize = (int(cfg["stream"]["resolution"][0]),
-                 int(cfg["stream"]["resolution"][1]))
+        rsize = (int(cfg["stream"]["resolution"][1]),
+                 int(cfg["stream"]["resolution"][0]))
         resized = cv2.resize(stream_img, rsize,
                              interpolation=cv2.INTER_LINEAR)
         cv2.imshow("Camera calibration, press 'q' to quit.", resized)
@@ -295,8 +295,11 @@ if __name__ == '__main__':
         h,  w = stream_img.shape[:2]
         newcameramtx, roi = cv2.getOptimalNewCameraMatrix(
             mtx, dist, (w, h), 1, (w, h))
+
         dst = cv2.undistort(stream_img, mtx, dist, None, newcameramtx)
-        cv2.imshow("Undistorted image", dst)
+        resized = cv2.resize(dst, rsize,
+                             interpolation=cv2.INTER_LINEAR)
+        cv2.imshow("Undistorted image", resized)
         cv2.waitKey(10000)
         cv2.destroyAllWindows()
 
