@@ -297,9 +297,8 @@ if __name__ == '__main__':
             mtx, dist, (w, h), 1, (w, h))
         dst = cv2.undistort(stream_img, mtx, dist, None, newcameramtx)
         cv2.imshow("Undistorted image", dst)
-        cv2.waitKey(1)
+        cv2.waitKey(10000)
         cv2.destroyAllWindows()
-
 
     # output the corners and ids.
     else:
