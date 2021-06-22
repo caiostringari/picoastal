@@ -1,5 +1,6 @@
-# SCRIPT   : calib_ChArUco.py
-# POURPOSE : camera calibration using ChArUco boards.
+# SCRIPT   : ChArUco_online_calibraiton.py
+# POURPOSE : Online camera calibration using ChArUco boards.
+#            Only works with the raspberry pi camera.
 # AUTHOR   : Caio Eadi Stringari
 
 import os
@@ -19,22 +20,6 @@ import pickle
 # PiCamera
 from picamera import PiCamera
 from picamera.array import PiRGBArray
-
-
-def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
-    dim = None
-    (h, w) = image.shape[:2]
-
-    if width is None and height is None:
-        return image
-    if width is None:
-        r = height / float(h)
-        dim = (int(w * r), height)
-    else:
-        r = width / float(w)
-        dim = (width, int(h * r))
-
-    return cv2.resize(image, dim, interpolation=inter)
 
 
 def set_camera_parameters(cfg):
@@ -132,20 +117,6 @@ if __name__ == '__main__':
                         required=False,
                         default=25,
                         help="Maximum number of images to use.",)
-
-    parser.add_argument("--stream_height",
-                        action="store",
-                        dest="stream_height",
-                        required=False,
-                        default=600,
-                        help="Height for the opencv stream window image.",)
-
-    parser.add_argument("--stream_width",
-                        action="store",
-                        dest="stream_width",
-                        required=False,
-                        default=800,
-                        help="Width for the opencv stream window image.",)
 
     parser.add_argument("--output", "-o",
                         action="store",
@@ -248,7 +219,7 @@ if __name__ == '__main__':
         try:
             stream_img = im_with_board
         except Exception:
-            stream_img = image
+            stream_img = image  # image without the board.
 
         # resize to fit on screen
         rsize = (int(cfg["stream"]["resolution"][0]),
@@ -285,6 +256,8 @@ if __name__ == '__main__':
         out["distortion_coefficients"] = dist
         out["rotation_vectors"] = dist
         out["translation_vectors"] = dist
+        out["corners"] = all_corners
+        out["ids"] = all_ids
         out["last_frame"] = im_with_board
         pickle.dump(out, outfile)
         outfile.close()

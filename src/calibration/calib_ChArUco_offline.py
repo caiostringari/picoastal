@@ -13,25 +13,11 @@ from natsort import natsorted
 
 import numpy as np
 
-# from time import sleep
+from time import sleep
+
+import pickle
 
 import matplotlib.pyplot as plt
-
-
-def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
-    dim = None
-    (h, w) = image.shape[:2]
-
-    if width is None and height is None:
-        return image
-    if width is None:
-        r = height / float(h)
-        dim = (int(w * r), height)
-    else:
-        r = width / float(w)
-        dim = (width, int(h * r))
-
-    return cv2.resize(image, dim, interpolation=inter)
 
 
 if __name__ == '__main__':
@@ -42,11 +28,18 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # input configuration file
+    parser.add_argument("--from_corners",
+                        action="store_true",
+                        dest="from_corners",
+                        required=True,
+                        help="Use a pickle file to do the calibration.",)
+
+    # input images
     parser.add_argument("--input", "-i",
                         action="store",
                         dest="input",
                         required=True,
-                        help="Input folder with images.",)
+                        help="Input folder with images or pickle file.",)
 
     parser.add_argument("--format", "-fmt",
                         action="store",
@@ -96,12 +89,26 @@ if __name__ == '__main__':
                         required=False,
                         help="ArUco Dictionary id.")
 
-    parser.add_argument("--max-images", "-N",
+    parser.add_argument("--max_images", "-N",
                         action="store",
                         dest="max_images",
                         required=False,
                         default=100,
                         help="Maximum number of images to use.",)
+
+    parser.add_argument("--stream_height",
+                        action="store",
+                        dest="stream_height",
+                        required=False,
+                        default=600,
+                        help="Height for the opencv stream window image.",)
+
+    parser.add_argument("--stream_width",
+                        action="store",
+                        dest="stream_width",
+                        required=False,
+                        default=800,
+                        help="Width for the opencv stream window image.",)
 
     parser.add_argument("--output", "-o",
                         action="store",
@@ -128,95 +135,107 @@ if __name__ == '__main__':
     board = cv2.aruco.CharucoBoard_create(
         squares_x, squares_y, square_length, marker_length, dictionary)
 
-    # read images
-    images = natsorted(glob(args.input + "/*{}".format(args.format)))
-    print("  -- Found {} {} images.".format(len(images), args.format))
+    # calibrate from detected corners
+    if args.from_corners:
 
-    # loop over all images
-    all_corners = []
-    all_ids = []
-    total_images = 0
-    for i, image in enumerate(images):
+        with open(args.input, 'rb') as f:
+            x = pickle.load(f)
 
-        print("  - processing image {} of {}".format(i+1, len(images)),
-              end="\r")
+        all_corners = x["corners"][0:20]
+        all_ids = x["ids"][0:20]
 
-        # read
-        frame = cv2.imread(image)
-
-        # covert to grey scale
+        frame = x["last_frame"]
         grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        imsize = frame.shape[:2]
 
-        # detect
-        corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(
-            grey, dictionary)
-        cv2.aruco.refineDetectedMarkers(
-            grey, board, corners, ids, rejectedImgPoints)
+    # do the detection
+    else:
 
-        if len(corners) > 0:  # if there is at least one marker detected
+        # read images
+        images = natsorted(glob(args.input + "/*{}".format(args.format)))
+        print("  -- Found {} {} images.".format(len(images), args.format))
 
-            # refine
-            retval, ref_corners, ref_ids = cv2.aruco.interpolateCornersCharuco(
-                corners, ids, grey, board)
+        # loop over all images
+        all_corners = []
+        all_ids = []
+        total_images = 0
+        for i, image in enumerate(images):
 
-            if retval > 5:  # calibrateCameraCharuco needs at least 4 corners
+            print("  - processing image {} of {}".format(i + 1, len(images)),
+                  end="\r")
 
-                # draw board on image
-                im_with_board = cv2.aruco.drawDetectedCornersCharuco(
-                    frame, ref_corners, ref_ids, (0, 255, 0))
+            # read
+            frame = cv2.imread(image)
 
-                # append
-                all_corners.append(ref_corners)
-                all_ids.append(ref_ids)
+            # covert to grey scale
+            grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            imsize = grey.shape
 
-                if total_images > max_images:
-                    print("Got all images I needed, breaking the loop.")
+            # detect
+            corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(
+                grey, dictionary)
+            cv2.aruco.refineDetectedMarkers(
+                grey, board, corners, ids, rejectedImgPoints)
+
+            if len(corners) > 0:  # if there is at least one marker detected
+
+                # refine
+                retval, ref_corners, ref_ids = cv2.aruco.interpolateCornersCharuco(
+                    corners, ids, grey, board)
+
+                # calibrateCameraCharuco needs at least 4 corners
+                if retval > 5:
+
+                    # draw board on image
+                    im_with_board = cv2.aruco.drawDetectedCornersCharuco(
+                        frame, ref_corners, ref_ids, (0, 255, 0))
+
+                    # append
+                    all_corners.append(ref_corners)
+                    all_ids.append(ref_ids)
+
+                    if total_images > max_images:
+                        print("\n  --> Found all images I needed. "
+                              "Breaking the loop after {} images.".format(
+                                  max_images))
+                        break
+
+                    total_images += 1
+
+            else:
+                pass
+
+            if args.show:
+                rsize = (int(args.stream_width), int(args.stream_height))
+                resized = cv2.resize(im_with_board, rsize,
+                                     interpolation=cv2.INTER_LINEAR)
+                cv2.imshow("Camera calibration, pres 'q' to quit.", resized)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
 
-                total_images += 1
+        # Destroy any open CV windows
+        cv2.destroyAllWindows()
 
-        else:
-            pass
 
-        if args.show:
-            resize = ResizeWithAspectRatio(frame, height=800)
-            cv2.imshow("Camera calibration, pres 'q' to quit.", resize)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-    # Destroy any open CV windows
-    cv2.destroyAllWindows()
-
-    sys.exit()
+    print("\n - Starting calibrateCameraCharuco(), this will take a while.")
 
     # calibrate the camera
-
-    # termination criteria
     retval, mtx, dist, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(
         all_corners, all_ids, board, imsize, None, None)
 
     # undistort
-    img = cv2.imread(images[0])
-    h,  w = img.shape[:2]
+    h,  w = grey.shape[:2]
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(
         mtx, dist, (w, h), 1, (w, h))
 
     # undistort
-    dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
+    dst = cv2.undistort(frame, mtx, dist, None, newcameramtx)
 
+    if args.show:
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+        ax1.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        ax2.imshow(cv2.cvtColor(dst, cv2.COLOR_BGR2RGB))
+        fig.tight_layout()
+        plt.show()
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
-    ax1.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-    ax2.imshow(cv2.cvtColor(dst, cv2.COLOR_BGR2RGB))
-    fig.tight_layout()
-    plt.show()
-
-    # print(mtx)
-
-    # except:
-    #     cap.release()
-    #
-    # cap.release()
-    # cv2.destroyAllWindows()
-
-    # main()
+    print("\nMy work is done!\n")
