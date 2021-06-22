@@ -245,10 +245,12 @@ if __name__ == '__main__':
             pass
 
         # image to be displayed
-        if not im_with_board:
-            stream_img = image
-        else:
+        try:
             stream_img = im_with_board
+        except Exception:
+            stream_img = image
+
+        # resize to fit on screen
         rsize = (int(cfg["stream"]["resolution"][0]),
                  int(cfg["stream"]["resolution"][1]))
         resized = cv2.resize(stream_img, rsize,
