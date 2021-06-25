@@ -104,7 +104,7 @@ In 2020, the Raspberry Pi foundation released the [High Quality Camera](https://
 
 FLIR recommends Ubuntu for working with their cameras. Unfortunately,
 the full version of Ubuntu is too demanding to run on the Raspberry Pi 4.
-Therefore, we recommend [Ubuntu Mate](https://www.google.com) 20.04.
+Therefore, we recommend [Ubuntu Mate](https://ubuntu-mate.org/) 20.04.
 
 If you are interest in using only Raspberry Pi's HQ camera, [Raspberry Pi OS](https://www.raspberrypi.org/software/) is a much lighter option and usually comes pre-installed with the board. Note that FLIR's cameras won't play well with Raspberry Pi OS (at least in our experience).
 
@@ -571,11 +571,63 @@ To save and exit use ```crtl+o``` + ```crtl+x```.
 
 Controlling the cameras remotely is quite easy. All you need to do is to make sure you have [RealVNC](https://www.realvnc.com/en/) installed both in the Raspberry Pi and in your phone. By default, Raspberry Pi Os has VNC installed, on Ubuntu you will need to install it by yourself. Tip: Create a hot spot using a second phone and connect both your main phone and the raspberry to the network to control it in the field.
 
-# 5. Post Processing
+# 5. Camera Calibration
+
+Camera calibration is hard! To try to make it less hard, the [`ChArUco`](https://docs.opencv.org/3.4/df/d4a/tutorial_charuco_detection.html) calibration model is recommended. This method is advantageous over the traditional chessboard method because each marker on the calibration board can be tracked individually.
+
+# 5.1. Generating a ChArUco Board
+
+Each `ChArUco` board is unique. So we need to create one and keep track of how it was created. To do so with the default configuration, do:
+
+```bash
+python src/calibration/create_ChArUco_board.py
+```
+
+The result is is as follows:
+
+![](doc/ChArUco_6X6_250.png)
+
+There are several parameters that can be set. Use `create_ChArUco_board.py --help` for details.
+
+# 5.2. Offline Calibration
+
+To calibrate the camera from a series of images, do:
+
+```bash
+python src/calibration/calib_ChArUco_offline.py - i "input_images/" -o "camera_parameters.pkl|json"
+```
+
+Again, there are several parameters that can be set. Use `calib_ChArUco_offline.py --help` for details. The most import thing here is to use the same board parameters as used for `create_ChArUco_board.py`
+
+# 5.3. Online Calibration
+
+To calibrate FLIR on-the-fly, do:
+
+```bash
+python src/calibration/ChArUco_online_calibration_flir.py - i "config.json" -o "camera_parameters.pkl|json"
+````
+
+To calibrate Raspberry Pi camera on-the-fly, do:
+
+```bash
+python src/calibration/ChArUco_online_calibration_rpi.py - i "config.json" -o "camera_parameters.pkl|json"
+````
+
+Again, there are several parameters that can be set. Use `ChArUco_online_calibration_flir|rpi.py --help` for details. The most import thing here is to use the same board parameters as used for `create_ChArUco_board.py`
+
+# 5.3. Calibration results
+
+To investigate the results of a camera calibration do:
+
+```
+python src/calibration/show_calib_results.py -i calibration.pkl -o "result.png"
+```
+
+# 6. Post Processing
 
 Post processing is usually too computationally expensive to run on the Raspberry Pi. However, some tools will be available here.
 
-## 5.1. Average and Variance Images
+## 6.1. Average and Variance Images
 
 To compute an average ([or time exposure](http://www.coastalwiki.org/wiki/Argus_image_types_and_conventions)) image you need to install some extra packages:
 
@@ -610,7 +662,7 @@ Average                    |  Variance
 ![](doc/average.png)       |  ![](doc/variance.png)
 
 
-## 5.2. Brightest and darkest images
+## 6.2. Brightest and darkest images
 
 To find the brightest and darkest images, use the [`variance.py`](src/post/brightest_and_darkest.py) script:
 
@@ -626,17 +678,17 @@ Brightest                  |  Darkest
 
 This scripts converts the images to the `HSV` colour space and looks for the images with summed highest and lowest brightness (i.e., the `V` in the `HSV`).
 
-## 5.3. Rectification
+## 6.3. Rectification
 
 Coming soon.
 
-## 5.3. Timestacks
+## 6.4. Timestacks
 
 Coming soon.
 
-# 6. Known issues
+# 7. Known issues
 
-## 6.1. FLIR Camera start up
+## 7.1. FLIR Camera start up
 
 More often than not, the FLIR camera does not start properly and you get a weird black and white image. The only way I found to fix this was to open `spinview` and set the parameter below to `Auto`:
 
@@ -644,7 +696,7 @@ More often than not, the FLIR camera does not start properly and you get a weird
 
 You will need to do this every time the camera is disconnected.
 
-## 6.2. `libmmal.so` issue on Ubuntu Mate 20.04
+## 7.2. `libmmal.so` issue on Ubuntu Mate 20.04
 
 For some reason, the python wrapper for the HQ camera does not link properly to `libmmal.so`. The easiest way to solve this is to download the `.so` file from this repository and replace the bad on on Ubuntu.
 
@@ -661,7 +713,7 @@ sudo mv libmmal.so /usr/lib/arm-linux-gnueabihf/libmmal.so
 
 This issue does not happen in Raspberry Pi Os.
 
-## 6.3 - Upside-down display
+## 7.3 - Upside-down display
 
 The 7' display is upside-down out of the box. To fix this on Ubuntu Mate do:
 
@@ -673,10 +725,10 @@ To make it permanent, open the system configuration panel and search for `displa
 
 ![](doc/display_issue.png)
 
-# 7. Future improvements
+# 8. Future improvements
 
 1. Add the ability to handle more than one camera
 
-# 8. Disclaimer
+# 9. Disclaimer
 
 There is no warranty for the program, to the extent permitted by applicable law except when otherwise stated in writing the copyright holders and/or other parties provide the program “as is” without warranty of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. the entire risk as to the quality and performance of the program is with you. should the program prove defective, you assume the cost of all necessary servicing, repair or correction.

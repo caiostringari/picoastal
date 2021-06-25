@@ -1,10 +1,49 @@
 # SCRIPT   : make_ChArUco_board.py
-# POURPOSE : Cerate a board for calibration using the ChArUco model.
+# POURPOSE : Create a board for calibration using the ChArUco model.
 # AUTHOR   : Caio Eadi Stringari
 
 import argparse
 
 import cv2
+
+
+def main():
+    """Call the main program."""
+
+    # parse parameters
+    squares_x = int(args.squares_x)  # number of squares in X direction
+    squares_y = int(args.squares_y)  # number of squares in Y direction
+    square_length = int(args.square_length)  # square side length (in pixels)
+    marker_length = int(args.marker_length)  # marker side length (in pixels)
+    dictionary_id = args.dictionary_id  # dictionary id
+
+    margins = square_length - marker_length  # margins size (in pixels)
+    border_bits = int(args.border_bits)  # number of bits in marker borders
+
+    # compute image size
+    image_width = squares_x * square_length + 2 * margins
+    image_height = squares_y * square_length + 2 * margins
+    image_size = (image_width, image_height)  # needs to be a tuple
+
+    # create board
+    dict_id = getattr(cv2.aruco, "DICT_{}".format(dictionary_id))
+    dictionary = cv2.aruco.getPredefinedDictionary(dict_id)
+
+    # create the board instance
+    board = cv2.aruco.CharucoBoard_create(
+        squares_x, squares_y, square_length, marker_length, dictionary)
+
+    # create an image
+    board_img = board.draw(image_size)
+
+    # show if requested
+    if args.show:
+        cv2.imshow("ChArUco DICT_{}".format(dictionary_id), board_img)
+        cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    # write to file
+    cv2.imwrite(args.output, board_img)
 
 
 if __name__ == '__main__':
@@ -69,37 +108,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # parse parameters
-    squares_x = int(args.squares_x)  # number of squares in X direction
-    squares_y = int(args.squares_y)  # number of squares in Y direction
-    square_length = int(args.square_length)  # square side length (in pixels)
-    marker_length = int(args.marker_length)  # marker side length (in pixels)
-    dictionary_id = args.dictionary_id  # dictionary id
-
-    margins = square_length - marker_length  # margins size (in pixels)
-    border_bits = int(args.border_bits)  # number of bits in marker borders
-
-    # compute image size
-    image_width = squares_x * square_length + 2 * margins
-    image_height = squares_y * square_length + 2 * margins
-    image_size = (image_width, image_height)  # needs to be a tuple
-
-    # create board
-    dict_id = getattr(cv2.aruco, "DICT_{}".format(dictionary_id))
-    dictionary = cv2.aruco.getPredefinedDictionary(dict_id)
-
-    # create the board instance
-    board = cv2.aruco.CharucoBoard_create(
-        squares_x, squares_y, square_length, marker_length, dictionary)
-
-    # create an image
-    board_img = board.draw(image_size)
-
-    # show if requested
-    if args.show:
-        cv2.imshow("ChArUco DICT_{}".format(dictionary_id), board_img)
-        cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-    # write to file
-    cv2.imwrite(args.output, board_img)
+    main()

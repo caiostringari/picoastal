@@ -16,10 +16,20 @@ import numpy as np
 from time import sleep
 
 import pickle
+import json
 
 # PiCamera
 from picamera import PiCamera
 from picamera.array import PiRGBArray
+
+
+# https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
+class NumpyEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 
 def set_camera_parameters(cfg):
@@ -62,18 +72,6 @@ if __name__ == '__main__':
                         dest="config",
                         required=True,
                         help="Camera configuration JSON file.",)
-
-    parser.add_argument("--format", "-fmt",
-                        action="store",
-                        dest="format",
-                        default="png",
-                        required=False,
-                        help="Image format. Default is png.",)
-
-    parser.add_argument("--show", "-show",
-                        action="store_true",
-                        dest="show",
-                        help="Show the calibration process.",)
 
     # board definition
     parser.add_argument("--squares_x",
@@ -254,13 +252,19 @@ if __name__ == '__main__':
         out["retval"] = retval
         out["camera_matrix"] = mtx
         out["distortion_coefficients"] = dist
-        out["rotation_vectors"] = dist
-        out["translation_vectors"] = dist
+        out["rotation_vectors"] = rvecs
+        out["translation_vectors"] = tvecs
         out["corners"] = all_corners
         out["ids"] = all_ids
-        out["last_frame"] = im_with_board
-        pickle.dump(out, outfile)
-        outfile.close()
+
+        if args.output.lower().endswith("json"):
+            with open(args.output, 'w') as fp:
+                json.dump(out, fp, cls=NumpyEncoder)
+        else:
+            out["last_frame"] = im_with_board
+            # out["board"] = board
+            with open(args.output, 'wb') as fp:
+                pickle.dump(out, fp)
 
         # display the results
 

@@ -1,5 +1,6 @@
-# SCRIPT   : calib_ChArUco.py
-# POURPOSE : camera calibration using ChArUco boards.
+# SCRIPT   : calib_ChArUco_offline.py
+# POURPOSE : camera calibration using ChArUco boards. Calibrate either from
+#            a series of images or from a series of detections.
 # AUTHOR   : Caio Eadi Stringari
 
 # arguments
@@ -15,9 +16,18 @@ import numpy as np
 
 from time import sleep
 
+import json
 import pickle
 
 import matplotlib.pyplot as plt
+
+# https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
+class NumpyEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 
 if __name__ == '__main__':
@@ -27,11 +37,10 @@ if __name__ == '__main__':
     # argument parser
     parser = argparse.ArgumentParser()
 
-    # input configuration file
+    # calibration from detected corners
     parser.add_argument("--from_corners",
                         action="store_true",
                         dest="from_corners",
-                        required=True,
                         help="Use a pickle file to do the calibration.",)
 
     # input images
@@ -114,7 +123,9 @@ if __name__ == '__main__':
                         action="store",
                         dest="output",
                         required=True,
-                        help="Output JSON file.",)
+                        help="Output filename."
+                             "If extension is json, write a json file"
+                             "If extension is otherwise, write a pickle file",)
 
     args = parser.parse_args()
 
@@ -141,8 +152,8 @@ if __name__ == '__main__':
         with open(args.input, 'rb') as f:
             x = pickle.load(f)
 
-        all_corners = x["corners"]
-        all_ids = x["ids"]
+        all_corners = x["corners"][0:int(args.max_images)]
+        all_ids = x["ids"][0:int(args.max_images)]
 
         frame = x["last_frame"]
         grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -230,6 +241,25 @@ if __name__ == '__main__':
 
     # undistort
     dst = cv2.undistort(frame, mtx, dist, None, newcameramtx)
+
+    # save the output
+    out = {}
+    outfile = open(args.output, 'wb')
+    out["retval"] = retval
+    out["camera_matrix"] = mtx
+    out["distortion_coefficients"] = dist
+    out["rotation_vectors"] = rvecs
+    out["translation_vectors"] = tvecs
+    out["corners"] = all_corners
+    out["ids"] = all_ids
+    if args.output.lower().endswith("json"):
+        with open(args.output, 'w') as fp:
+            json.dump(out, fp, cls=NumpyEncoder)
+    else:
+        # out["board"] = board
+        out["last_frame"] = frame
+        with open(args.output, 'wb') as fp:
+            pickle.dump(out, fp)
 
     if args.show:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
