@@ -196,7 +196,9 @@ if __name__ == '__main__':
 
                 # draw board on image
                 im_with_board = cv2.aruco.drawDetectedCornersCharuco(
-                    image, ref_corners, ref_ids, (0, 255, 0))
+                    frame, ref_corners, ref_ids, (0, 0, 0))
+                im_with_board = cv2.aruco.drawDetectedMarkers(
+                    im_with_board, corners, ids)
 
                 # append
                 all_corners.append(ref_corners)
@@ -246,16 +248,21 @@ if __name__ == '__main__':
         retval, mtx, dist, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(
             all_corners, all_ids, board, imsize, None, None)
 
+        print(f"\n    - Calibration error: {round(retval, 2)} units")
+
         # output the results of the calibration
         out = {}
         outfile = open(args.output, 'wb')
-        out["retval"] = retval
+        out["error"] = retval
         out["camera_matrix"] = mtx
         out["distortion_coefficients"] = dist
         out["rotation_vectors"] = rvecs
         out["translation_vectors"] = tvecs
         out["corners"] = all_corners
         out["ids"] = all_ids
+        out["chessboard_size"] = board.getChessboardSize()
+        out["marker_length"] = board.getMarkerLength()
+        out["square_length"] = board.getSquareLength()
 
         if args.output.lower().endswith("json"):
             with open(args.output, 'w') as fp:

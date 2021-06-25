@@ -30,6 +30,40 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+def drawDetectedCornersCharuco(img, corners, ids, rect_size=3,
+                               id_font=cv2.FONT_HERSHEY_DUPLEX,
+                               id_scale=0.5, id_color=(255, 255, 0),
+                               rect_thickness=1):
+    """
+    Draw rectangles and IDs to the corners
+    Parameters
+    ----------
+    img : numpy.array()
+        Two dimensional image matrix. Image can be grayscale image or RGB image
+        including 3 layers. Allowed shapes are (x, y, 1) or (x, y, 3).
+    corners : numpy.array()
+        Checkerboard corners.
+    ids : numpy.array()
+        Corners' IDs.
+    """
+
+    if ids.size > 0:
+
+        # draw rectangels and IDs
+        for (corner, id) in zip(corners, ids):
+            _corner = np.squeeze(corner)
+            corner_x = int(_corner[0])
+            corner_y = int(_corner[1])
+            id_text = "{}".format(str(id[0]))
+            id_coord = (corner_x + 2*rect_size, corner_y + 2*rect_size)
+            cv2.rectangle(img, (corner_x - rect_size, corner_y - rect_size),
+                        (corner_x + rect_size, corner_y + rect_size),
+                        id_color, thickness=rect_thickness)
+            cv2.putText(img, id_text, id_coord, id_font, id_scale, id_color)
+
+    return img
+
+
 if __name__ == '__main__':
 
     print("\nCamera calibration starting, please wait...\n")
@@ -199,7 +233,9 @@ if __name__ == '__main__':
 
                     # draw board on image
                     im_with_board = cv2.aruco.drawDetectedCornersCharuco(
-                        frame, ref_corners, ref_ids, (0, 255, 0))
+                        frame, ref_corners, ref_ids, (0, 0, 0))
+                    im_with_board = cv2.aruco.drawDetectedMarkers(
+                        im_with_board, corners, ids)
 
                     # append
                     all_corners.append(ref_corners)
@@ -227,12 +263,14 @@ if __name__ == '__main__':
         # Destroy any open CV windows
         cv2.destroyAllWindows()
 
-
+    # sys.exit()
     print("\n - Starting calibrateCameraCharuco(), this will take a while.")
 
     # calibrate the camera
     retval, mtx, dist, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(
         all_corners, all_ids, board, imsize, None, None)
+
+    print(f"\n    - Calibration error: {round(retval, 2)} units")
 
     # undistort
     h,  w = grey.shape[:2]
@@ -245,18 +283,20 @@ if __name__ == '__main__':
     # save the output
     out = {}
     outfile = open(args.output, 'wb')
-    out["retval"] = retval
+    out["error"] = retval
     out["camera_matrix"] = mtx
     out["distortion_coefficients"] = dist
     out["rotation_vectors"] = rvecs
     out["translation_vectors"] = tvecs
     out["corners"] = all_corners
     out["ids"] = all_ids
+    out["chessboard_size"] = board.getChessboardSize()
+    out["marker_length"] = board.getMarkerLength()
+    out["square_length"] = board.getSquareLength()
     if args.output.lower().endswith("json"):
         with open(args.output, 'w') as fp:
             json.dump(out, fp, cls=NumpyEncoder)
     else:
-        # out["board"] = board
         out["last_frame"] = frame
         with open(args.output, 'wb') as fp:
             pickle.dump(out, fp)

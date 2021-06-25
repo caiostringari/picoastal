@@ -17,39 +17,89 @@ year with a very similar similar set-up to the one described in this repository.
 - [Introduction](#introduction)
 - [Table of Contents](#table-of-contents)
 - [1. Hardware](#1-hardware)
-  - [1.1. Computer Board](#11-computer-board)
-  - [1.2. FLIR Machine Vision Camera](#12-flir-machine-vision-camera)
-  - [1.3 Raspberry Pi High Quality Camera (2021 update)](#13-raspberry-pi-high-quality-camera-2021-update)
+  * [1.1. Computer Board](#11-computer-board)
+  * [1.2. FLIR Machine Vision Camera](#12-flir-machine-vision-camera)
+  * [1.3 Raspberry Pi High Quality Camera (2021 update)](#13-raspberry-pi-high-quality-camera--2021-update-)
 - [2. Software](#2-software)
-  - [2.1. Operating System (OS)](#21-operating-system-os)
-    - [2.1.1. Ubuntu Mate Installation](#211-ubuntu-mate-installation)
-  - [2.2. FLIR's SDK](#22-flirs-sdk)
-    - [2.2.1. Dependencies](#221-dependencies)
-    - [2.2.2. Spinnaker Install](#222-spinnaker-install)
-    - [2.2.3. PySpin](#223-pyspin)
-  - [2.3 Raspberry Pi HQ Camera](#23-raspberry-pi-hq-camera)
+  * [2.1. Operating System (OS)](#21-operating-system--os-)
+    + [2.1.1. Ubuntu Mate Installation](#211-ubuntu-mate-installation)
+  * [2.2. FLIR's SDK](#22-flir-s-sdk)
+    + [2.2.1. Dependencies](#221-dependencies)
+    + [2.2.2. Spinnaker Install](#222-spinnaker-install)
+    + [2.2.3. PySpin](#223-pyspin)
+  * [2.3 Raspberry Pi HQ Camera](#23-raspberry-pi-hq-camera)
 - [3. Image Capture Configuration File](#3-image-capture-configuration-file)
-  - [3.1 FLIR Camera](#31-flir-camera)
-  - [3.2 Raspberry Pi HQ Camera](#32-raspberry-pi-hq-camera)
-    - [Options](#options)
-  - [3.3. Email Notifications (Optinal)](#33-email-notifications-optinal)
+  * [3.1 FLIR Camera](#31-flir-camera)
+  * [3.2 Raspberry Pi HQ Camera](#32-raspberry-pi-hq-camera)
+    + [Options](#options)
+  * [3.3. Email Notifications (Optinal)](#33-email-notifications--optinal-)
 - [4. Capturing Frames](#4-capturing-frames)
-  - [4.1. Displaying the Camera Stream.](#41-displaying-the-camera-stream)
-    - [FLIR Camera](#flir-camera)
-    - [Raspberry Pi HQ Camera](#raspberry-pi-hq-camera)
-    - [Desktop icon (Optinal)](#desktop-icon-optinal)
-  - [4.2. Single Capture Cycle](#42-single-capture-cycle)
-  - [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
-- [5. Post Processing](#5-post-processing)
-  - [5.1. Average and Variance Images](#51-average-and-variance-images)
-  - [5.2. Brightest and darkest images](#52-brightest-and-darkest-images)
-  - [5.3. Rectification](#53-rectification)
-  - [5.3. Timestacks](#53-timestacks)
-- [6. Known issues](#6-known-issues)
-  - [6.1. FLIR Camera start up](#61-flir-camera-start-up)
-  - [6.2. `libmmal.so` issue on Ubuntu Mate 20.04](#62-libmmalso-issue-on-ubuntu-mate-2004)
-- [7. Future Improvements](#7-future-improvements)
-- [8. Disclaimer](#8-disclaimer)
+  * [4.1. Displaying the Camera Stream.](#41-displaying-the-camera-stream)
+    + [FLIR Camera](#flir-camera)
+    + [Raspberry Pi HQ Camera](#raspberry-pi-hq-camera)
+    + [Desktop icon (Optinal)](#desktop-icon--optinal-)
+  * [4.2. Single Capture Cycle](#42-single-capture-cycle)
+  * [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
+  * [4.4. Controlling the Cameras Remotely](#44-controlling-the-cameras-remotely)
+- [5. Camera Calibration](#5-camera-calibration)
+- [5.1. Generating a ChArUco Board](#51-generating-a-charuco-board)
+- [5.2. Offline Calibration](#52-offline-calibration)
+- [5.3. Online Calibration](#53-online-calibration)
+- [5.3. Display Calibration Results](#53-display-calibration-results)
+- [6. Post Processing](#6-post-processing)
+  * [6.1. Average and Variance Images](#61-average-and-variance-images)
+  * [6.2. Brightest and darkest images](#62-brightest-and-darkest-images)
+  * [6.3. Rectification](#63-rectification)
+  * [6.4. Timestacks](#64-timestacks)
+- [7. Known issues](#7-known-issues)
+  * [7.1. FLIR Camera start up](#71-flir-camera-start-up)
+  * [7.2. `libmmal.so` issue on Ubuntu Mate 20.04](#72--libmmalso--issue-on-ubuntu-mate-2004)
+  * [7.3 - Upside-down display](#73---upside-down-display)
+- [8. Future improvements](#8-future-improvements)
+- [9. Disclaimer](#9-disclaimer)
+- [Introduction](#introduction-1)
+- [Table of Contents](#table-of-contents-1)
+- [1. Hardware](#1-hardware-1)
+  * [1.1. Computer Board](#11-computer-board-1)
+  * [1.2. FLIR Machine Vision Camera](#12-flir-machine-vision-camera-1)
+  * [1.3 Raspberry Pi High Quality Camera (2021 update)](#13-raspberry-pi-high-quality-camera--2021-update--1)
+- [2. Software](#2-software-1)
+  * [2.1. Operating System (OS)](#21-operating-system--os--1)
+    + [2.1.1. Ubuntu Mate Installation](#211-ubuntu-mate-installation-1)
+  * [2.2. FLIR's SDK](#22-flir-s-sdk-1)
+    + [2.2.1. Dependencies](#221-dependencies-1)
+    + [2.2.2. Spinnaker Install](#222-spinnaker-install-1)
+    + [2.2.3. PySpin](#223-pyspin-1)
+  * [2.3 Raspberry Pi HQ Camera](#23-raspberry-pi-hq-camera-1)
+- [3. Image Capture Configuration File](#3-image-capture-configuration-file-1)
+  * [3.1 FLIR Camera](#31-flir-camera-1)
+  * [3.2 Raspberry Pi HQ Camera](#32-raspberry-pi-hq-camera-1)
+    + [Options](#options-1)
+  * [3.3. Email Notifications (Optinal)](#33-email-notifications--optinal--1)
+- [4. Capturing Frames](#4-capturing-frames-1)
+  * [4.1. Displaying the Camera Stream.](#41-displaying-the-camera-stream-1)
+    + [FLIR Camera](#flir-camera-1)
+    + [Raspberry Pi HQ Camera](#raspberry-pi-hq-camera-1)
+    + [Desktop icon (Optinal)](#desktop-icon--optinal--1)
+  * [4.2. Single Capture Cycle](#42-single-capture-cycle-1)
+  * [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles-1)
+  * [4.4. Controlling the Cameras Remotely](#44-controlling-the-cameras-remotely-1)
+- [5. Camera Calibration](#5-camera-calibration-1)
+- [5.1. Generating a ChArUco Board](#51-generating-a-charuco-board-1)
+- [5.2. Offline Calibration](#52-offline-calibration-1)
+- [5.3. Online Calibration](#53-online-calibration-1)
+- [5.3. Display Calibration Results](#53-display-calibration-results-1)
+- [6. Post Processing](#6-post-processing-1)
+  * [6.1. Average and Variance Images](#61-average-and-variance-images-1)
+  * [6.2. Brightest and darkest images](#62-brightest-and-darkest-images-1)
+  * [6.3. Rectification](#63-rectification-1)
+  * [6.4. Timestacks](#64-timestacks-1)
+- [7. Known issues](#7-known-issues-1)
+  * [7.1. FLIR Camera start up](#71-flir-camera-start-up-1)
+  * [7.2. `libmmal.so` issue on Ubuntu Mate 20.04](#72--libmmalso--issue-on-ubuntu-mate-2004-1)
+  * [7.3 - Upside-down display](#73---upside-down-display-1)
+- [8. Future improvements](#8-future-improvements-1)
+- [9. Disclaimer](#9-disclaimer-1)
 
 
 This tutorial assumes that you have some familiarity with the Linux command line
@@ -577,7 +627,7 @@ Camera calibration is hard! To try to make it less hard, the [`ChArUco`](https:/
 
 # 5.1. Generating a ChArUco Board
 
-Each `ChArUco` board is unique. So we need to create one and keep track of how it was created. To do so with the default configuration, do:
+Each `ChArUco` board is unique. To create one with the default configuration, do:
 
 ```bash
 python src/calibration/create_ChArUco_board.py
@@ -587,7 +637,7 @@ The result is is as follows:
 
 ![](doc/ChArUco_6X6_250.png)
 
-There are several parameters that can be set. Use `create_ChArUco_board.py --help` for details.
+There are several parameters that can be set. Use `create_ChArUco_board.py --help` for details. Make sure to take note of which parameters were used to create the board because you will need to know then later!
 
 # 5.2. Offline Calibration
 
@@ -597,7 +647,7 @@ To calibrate the camera from a series of images, do:
 python src/calibration/calib_ChArUco_offline.py - i "input_images/" -o "camera_parameters.pkl|json"
 ```
 
-Again, there are several parameters that can be set. Use `calib_ChArUco_offline.py --help` for details. The most import thing here is to use the same board parameters as used for `create_ChArUco_board.py`
+Again, there are several parameters that can be set. Use `calib_ChArUco_offline.py --help` for details.
 
 # 5.3. Online Calibration
 
@@ -613,9 +663,11 @@ To calibrate Raspberry Pi camera on-the-fly, do:
 python src/calibration/ChArUco_online_calibration_rpi.py - i "config.json" -o "camera_parameters.pkl|json"
 ````
 
-Again, there are several parameters that can be set. Use `ChArUco_online_calibration_flir|rpi.py --help` for details. The most import thing here is to use the same board parameters as used for `create_ChArUco_board.py`
+Again, there are several parameters that can be set. Use `ChArUco_online_calibration_flir|rpi.py --help` for details.
 
-# 5.3. Calibration results
+The most import thing for camera calibration is to use the same board parameters as used for `create_ChArUco_board.py`
+
+# 5.3. Display Calibration Results
 
 To investigate the results of a camera calibration do:
 
