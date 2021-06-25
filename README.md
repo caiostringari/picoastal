@@ -42,10 +42,10 @@ year with a very similar similar set-up to the one described in this repository.
   * [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
   * [4.4. Controlling the Cameras Remotely](#44-controlling-the-cameras-remotely)
 - [5. Camera Calibration](#5-camera-calibration)
-- [5.1. Generating a ChArUco Board](#51-generating-a-charuco-board)
-- [5.2. Offline Calibration](#52-offline-calibration)
-- [5.3. Online Calibration](#53-online-calibration)
-- [5.3. Display Calibration Results](#53-display-calibration-results)
+  * [5.1. Generating a ChArUco Board](#51-generating-a-charuco-board)
+  * [5.2. Offline Calibration](#52-offline-calibration)
+  * [5.3. Online Calibration](#53-online-calibration)
+  * [5.3. Display Calibration Results](#53-display-calibration-results)
 - [6. Post Processing](#6-post-processing)
   * [6.1. Average and Variance Images](#61-average-and-variance-images)
   * [6.2. Brightest and darkest images](#62-brightest-and-darkest-images)
@@ -625,7 +625,7 @@ Controlling the cameras remotely is quite easy. All you need to do is to make su
 
 Camera calibration is hard! To try to make it less hard, the [`ChArUco`](https://docs.opencv.org/3.4/df/d4a/tutorial_charuco_detection.html) calibration model is recommended. This method is advantageous over the traditional chessboard method because each marker on the calibration board can be tracked individually.
 
-# 5.1. Generating a ChArUco Board
+## 5.1. Generating a ChArUco Board
 
 Each `ChArUco` board is unique. To create one with the default configuration, do:
 
@@ -639,7 +639,7 @@ The result is is as follows:
 
 There are several parameters that can be set. Use `create_ChArUco_board.py --help` for details. Make sure to take note of which parameters were used to create the board because you will need to know then later!
 
-# 5.2. Offline Calibration
+## 5.2. Offline Calibration
 
 To calibrate the camera from a series of images, do:
 
@@ -649,7 +649,7 @@ python src/calibration/calib_ChArUco_offline.py - i "input_images/" -o "camera_p
 
 Again, there are several parameters that can be set. Use `calib_ChArUco_offline.py --help` for details.
 
-# 5.3. Online Calibration
+## 5.3. Online Calibration
 
 To calibrate FLIR on-the-fly, do:
 
@@ -667,7 +667,7 @@ Again, there are several parameters that can be set. Use `ChArUco_online_calibra
 
 The most import thing for camera calibration is to use the same board parameters as used for `create_ChArUco_board.py`
 
-# 5.3. Display Calibration Results
+## 5.3. Display Calibration Results
 
 To investigate the results of a camera calibration do:
 
