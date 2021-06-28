@@ -3,6 +3,9 @@
 #            a series of images or from a series of detections.
 # AUTHOR   : Caio Eadi Stringari
 
+import os
+import sys
+
 # arguments
 import json
 import argparse
@@ -21,7 +24,49 @@ import pickle
 
 import matplotlib.pyplot as plt
 
+try:
+    import gooey
+    from gooey import GooeyParser
+except ImportError:
+    gooey = None
+
+
+def flex_add_argument(f):
+    """Make the add_argument accept (and ignore) the widget option."""
+
+    def f_decorated(*args, **kwargs):
+        kwargs.pop('widget', None)
+        return f(*args, **kwargs)
+
+    return f_decorated
+
+
+# monkey-patching a private class
+argparse._ActionsContainer.add_argument = flex_add_argument(
+    argparse.ArgumentParser.add_argument)
+
+
+# do not run GUI if it is not available or if command-line arguments are given.
+if gooey is None or len(sys.argv) > 1:
+    ArgumentParser = argparse.ArgumentParser
+
+    def gui_decorator(f):
+        return f
+else:
+    image_dir = os.path.realpath('../../doc/')
+    ArgumentParser = gooey.GooeyParser
+    gui_decorator = gooey.Gooey(
+        program_name='ChArUco Board Creator',
+        default_size=[800, 480],
+        navigation="TABBED",
+        show_sidebar=True,
+        image_dir=image_dir,
+        suppress_gooey_flag=True,
+    )
+
 # https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
+
+
 class NumpyEncoder(json.JSONEncoder):
 
     def default(self, obj):
@@ -55,35 +100,50 @@ def drawDetectedCornersCharuco(img, corners, ids, rect_size=3,
             corner_x = int(_corner[0])
             corner_y = int(_corner[1])
             id_text = "{}".format(str(id[0]))
-            id_coord = (corner_x + 2*rect_size, corner_y + 2*rect_size)
+            id_coord = (corner_x + 2 * rect_size, corner_y + 2 * rect_size)
             cv2.rectangle(img, (corner_x - rect_size, corner_y - rect_size),
-                        (corner_x + rect_size, corner_y + rect_size),
-                        id_color, thickness=rect_thickness)
+                          (corner_x + rect_size, corner_y + rect_size),
+                          id_color, thickness=rect_thickness)
             cv2.putText(img, id_text, id_coord, id_font, id_scale, id_color)
 
     return img
 
 
-if __name__ == '__main__':
-
+@gui_decorator
+def main():
     print("\nCamera calibration starting, please wait...\n")
 
-    # argument parser
-    parser = argparse.ArgumentParser()
+    # Argument parser
+    if not gooey:
+        parser = argparse.ArgumentParser()
+    else:
+        parser = GooeyParser(description="Offline Camera Calibration")
+
+    # input configuration file
+    if not gooey:
+        parser.add_argument("--input", "-i",
+                            action="store",
+                            dest="input",
+                            required=True,
+                            help="Input folder with images "
+                                 "or pickle file with corners and ids.",)
+    else:
+        parser.add_argument("--input", "-i",
+                            action="store",
+                            dest="input",
+                            required=True,
+                            help="Input folder with images "
+                                 "or pickle file with corners and ids.",
+                            widget='FileChooser')
 
     # calibration from detected corners
     parser.add_argument("--from_corners",
                         action="store_true",
                         dest="from_corners",
-                        help="Use a pickle file to do the calibration.",)
+                        help="Use a pickle file with corners and ids to do the"
+                             " calibration.",)
 
-    # input images
-    parser.add_argument("--input", "-i",
-                        action="store",
-                        dest="input",
-                        required=True,
-                        help="Input folder with images or pickle file.",)
-
+    # input images format
     parser.add_argument("--format", "-fmt",
                         action="store",
                         dest="format",
@@ -136,7 +196,7 @@ if __name__ == '__main__':
                         action="store",
                         dest="max_images",
                         required=False,
-                        default=100,
+                        default=25,
                         help="Maximum number of images to use.",)
 
     parser.add_argument("--stream_height",
@@ -197,8 +257,14 @@ if __name__ == '__main__':
     else:
 
         # read images
-        images = natsorted(glob(args.input + "/*{}".format(args.format)))
+        images = natsorted(glob(args.input + "/*.{}".format(args.format)))
         print("  -- Found {} {} images.".format(len(images), args.format))
+
+        if len(images) > max_images:
+            print("   -- Enough images. Starting now.")
+        else:
+            sys.exit(
+                "   -- Not enough images or trying to calibrate from a file.")
 
         # loop over all images
         all_corners = []
@@ -309,3 +375,8 @@ if __name__ == '__main__':
         plt.show()
 
     print("\nMy work is done!\n")
+
+
+if __name__ == '__main__':
+
+    main()

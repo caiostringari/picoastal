@@ -362,7 +362,7 @@ It's very hard to program FLIR's cameras, so I will only provide basic options h
 }
 ```
 
-This file can be save anywhere in the system and will be read any time a
+This file can be saved anywhere in the system and will be read any time a
 camera operation takes place.
 
 ## 3.2 Raspberry Pi HQ Camera
@@ -482,7 +482,7 @@ cd ~
 git clone https://github.com/caiostringari/PiCoastal.git picoastal
 ```
 
-## 4.1. Displaying the Camera Stream.
+## 4.1. Displaying the Camera Stream
 
 This is useful to point the camera in the right direction, to set the focus, and
 aperture.
@@ -568,7 +568,7 @@ export FLIR_GENTL32_CTI=/opt/spinnaker/lib/flir-gentl/FLIR_GenTL.cti
 workdir="/home/pi/picoastal/src/"
 echo "Current work dir is : "$workdir
 
-# get the current date/home/pi/
+# get the current date
 date=$(date)
 datestr=$(date +'%Y%m%d_%H%M')
 echo "Current date is : "$date
@@ -612,7 +612,7 @@ If this is your first time using ```crontab```, you will be asked to chose a
 text editor. I recommend using ```nano```. Add this line to the end of the file:
 
 ```
-0 * * * * bash /home/picoastal/src/flir/cycle_flir.sh
+0 * * * * bash /home/pi/picoastal/src/flir/cycle_flir.sh
 ```
 
 To save and exit use ```crtl+o``` + ```crtl+x```.
@@ -623,7 +623,18 @@ Controlling the cameras remotely is quite easy. All you need to do is to make su
 
 # 5. Camera Calibration
 
-Camera calibration is hard! To try to make it less hard, the [`ChArUco`](https://docs.opencv.org/3.4/df/d4a/tutorial_charuco_detection.html) calibration model is recommended. This method is advantageous over the traditional chessboard method because each marker on the calibration board can be tracked individually.
+Properly calibrating a camera is hard! To try to make it easier, the [`ChArUco`](https://docs.opencv.org/3.4/df/d4a/tutorial_charuco_detection.html) calibration model is recommended here. This method is advantageous over the traditional chessboard method because each marker on the calibration board can be tracked individually.
+
+The scripts below have an optional graphical interface. To use it, you need to install [Gooey](https://github.com/chriskiehl/Gooey). On a `x86_64` machine you can simply do:
+
+
+```bash
+sudo python3 -m pip install https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04/wxPython-4.1.1-cp38-cp38-linux_x86_64.whl
+sudo python3 -m pip install Gooey
+```
+
+On the Raspberry Pi, you will need to compile [Wx from the source](https://wiki.wxpython.org/BuildWxPythonOnRaspberryPi), clone [Gooey](https://github.com/chriskiehl/Gooey) and install using `python3 setup.py install`. To activate the GUI, simply call the scripts with no arguments.
+
 
 ## 5.1. Generating a ChArUco Board
 
@@ -635,7 +646,8 @@ python src/calibration/create_ChArUco_board.py
 
 The result is is as follows:
 
-![](doc/ChArUco_6X6_250.png)
+<img src="doc/ChArUco_6X6_250.png" alt="drawing" width="500" class="center"/>
+
 
 There are several parameters that can be set. Use `create_ChArUco_board.py --help` for details. Make sure to take note of which parameters were used to create the board because you will need to know then later!
 
@@ -651,28 +663,26 @@ Again, there are several parameters that can be set. Use `calib_ChArUco_offline.
 
 ## 5.3. Online Calibration
 
-To calibrate FLIR on-the-fly, do:
+To calibrate the FLIR camera on-the-fly, do:
 
 ```bash
 python src/calibration/ChArUco_online_calibration_flir.py - i "config.json" -o "camera_parameters.pkl|json"
 ````
 
-To calibrate Raspberry Pi camera on-the-fly, do:
+To calibrate the Raspberry Pi camera on-the-fly, do:
 
 ```bash
 python src/calibration/ChArUco_online_calibration_rpi.py - i "config.json" -o "camera_parameters.pkl|json"
 ````
 
-Again, there are several parameters that can be set. Use `ChArUco_online_calibration_flir|rpi.py --help` for details.
+As usual, there are several parameters that can be set. Use `ChArUco_online_calibration_flir|rpi.py --help` for details. The most import thing for camera calibration is to use the same board parameters as used for `create_ChArUco_board.py`
 
-The most import thing for camera calibration is to use the same board parameters as used for `create_ChArUco_board.py`
-
-## 5.3. Display Calibration Results
+## 5.4. Display Calibration Results
 
 To investigate the results of a camera calibration do:
 
 ```
-python src/calibration/show_calib_results.py -i calibration.pkl -o "result.png"
+python src/calibration/show_calib_results.py -i "calibration.pkl" -o "result.png"
 ```
 
 # 6. Post Processing

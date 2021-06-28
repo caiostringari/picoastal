@@ -4,6 +4,7 @@
 # AUTHOR   : Caio Eadi Stringari
 
 import os
+import sys
 
 # arguments
 import json
@@ -21,6 +22,46 @@ import json
 # PiCamera
 from picamera import PiCamera
 from picamera.array import PiRGBArray
+
+try:
+    import gooey
+    from gooey import GooeyParser
+except ImportError:
+    gooey = None
+
+
+def flex_add_argument(f):
+    """Make the add_argument accept (and ignore) the widget option."""
+
+    def f_decorated(*args, **kwargs):
+        kwargs.pop('widget', None)
+        return f(*args, **kwargs)
+
+    return f_decorated
+
+
+# monkey-patching a private class
+argparse._ActionsContainer.add_argument = flex_add_argument(
+    argparse.ArgumentParser.add_argument)
+
+
+# do not run GUI if it is not available or if command-line arguments are given.
+if gooey is None or len(sys.argv) > 1:
+    ArgumentParser = argparse.ArgumentParser
+
+    def gui_decorator(f):
+        return f
+else:
+    image_dir = os.path.realpath('../../doc/')
+    ArgumentParser = gooey.GooeyParser
+    gui_decorator = gooey.Gooey(
+        program_name='ChArUco Board Creator',
+        default_size=[800, 480],
+        navigation="TABBED",
+        show_sidebar=True,
+        image_dir=image_dir,
+        suppress_gooey_flag=True,
+    )
 
 
 # https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
@@ -59,19 +100,34 @@ def set_camera_parameters(cfg):
     return camera
 
 
-if __name__ == '__main__':
-
+@gui_decorator
+def main():
     print("\nCamera calibration starting, please wait...\n")
 
-    # argument parser
-    parser = argparse.ArgumentParser()
+    # Argument parser
+    if not gooey:
+        parser = argparse.ArgumentParser()
+    else:
+        parser = GooeyParser(description="ChArUco Online Calibration")
 
     # input configuration file
-    parser.add_argument("--config", "-i",
-                        action="store",
-                        dest="config",
-                        required=True,
-                        help="Camera configuration JSON file.",)
+    if not gooey:
+        parser.add_argument("--configuration-file", "-cfg", "-i",
+                            nargs=1,
+                            action="store",
+                            dest="config",
+                            required=True,
+                            default="../rpi/config_rpi.cfg",
+                            help="Configuration file (JSON).",)
+    else:
+        parser.add_argument("--configuration-file", "-cfg", "-i",
+                            help="Configuration file (JSON)",
+                            widget='FileChooser',
+                            nargs=1,
+                            action="store",
+                            dest="config",
+                            default="../rpi/config_rpi.cfg",
+                            required=True)
 
     # board definition
     parser.add_argument("--squares_x",
@@ -298,3 +354,8 @@ if __name__ == '__main__':
         outfile.close()
 
     print("\nMy work is done!\n")
+
+
+if __name__ == '__main__':
+
+    main()

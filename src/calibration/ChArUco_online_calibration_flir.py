@@ -58,6 +58,49 @@ import pickle
 # PySpin
 import PySpin
 
+# << GUI >>
+
+try:
+    import gooey
+    from gooey import GooeyParser
+except ImportError:
+    gooey = None
+
+
+def flex_add_argument(f):
+    """Make the add_argument accept (and ignore) the widget option."""
+
+    def f_decorated(*args, **kwargs):
+        kwargs.pop('widget', None)
+        return f(*args, **kwargs)
+
+    return f_decorated
+
+
+# monkey-patching a private class
+argparse._ActionsContainer.add_argument = flex_add_argument(
+    argparse.ArgumentParser.add_argument)
+
+
+# do not run GUI if it is not available or if command-line arguments are given.
+if gooey is None or len(sys.argv) > 1:
+    ArgumentParser = argparse.ArgumentParser
+
+    def gui_decorator(f):
+        return f
+else:
+    image_dir = os.path.realpath('../../doc/')
+    ArgumentParser = gooey.GooeyParser
+    gui_decorator = gooey.Gooey(
+        program_name='ChArUco Board Creator',
+        default_size=[800, 480],
+        navigation="TABBED",
+        show_sidebar=True,
+        # image_dir=image_dir,
+        suppress_gooey_flag=True,
+        )
+
+
 # https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
 class NumpyEncoder(json.JSONEncoder):
 
@@ -412,7 +455,8 @@ def acquire_images(cam, nodemap, nodemap_tldevice):
         cam.EndAcquisition()
         cv2.destroyAllWindows()
 
-        if args.calibrate_on_device:
+        # calibrate
+        if calibrate_on_device:
 
             print(
                 "\n - Starting calibrateCameraCharuco(), this will take a while.")
@@ -426,7 +470,7 @@ def acquire_images(cam, nodemap, nodemap_tldevice):
 
             # output the results of the calibration
             out = {}
-            outfile = open(args.output, 'wb')
+            # outfile = open(output, 'wb')
             out["error"] = retval
             out["camera_matrix"] = mtx
             out["distortion_coefficients"] = dist
@@ -438,12 +482,12 @@ def acquire_images(cam, nodemap, nodemap_tldevice):
             out["marker_length"] = board.getMarkerLength()
             out["square_length"] = board.getSquareLength()
 
-            if args.output.lower().endswith("json"):
-                with open(args.output, 'w') as fp:
+            if output.lower().endswith("json"):
+                with open(output, 'w') as fp:
                     json.dump(out, fp, cls=NumpyEncoder)
             else:
-                out["last_frame"] = im_with_board
-                with open(args.output, 'wb') as fp:
+                out["last_frame"] = image_data
+                with open(output, 'wb') as fp:
                     pickle.dump(out, fp)
 
             # display the results
@@ -470,10 +514,10 @@ def acquire_images(cam, nodemap, nodemap_tldevice):
         # output the corners and ids.
         else:
             out = {}
-            outfile = open(args.output, 'wb')
+            outfile = open(output, 'wb')
             out["corners"] = all_corners
             out["ids"] = all_ids
-            out["last_frame"] = im_with_board
+            out["last_frame"] = image_data
             pickle.dump(out, outfile)
             outfile.close()
 
@@ -576,6 +620,7 @@ def run_single_camera(cam, cfg):
     return result
 
 
+@gui_decorator
 def main():
     """
     Run the main program.
@@ -586,6 +631,117 @@ def main():
     :return: True if successful, False otherwise.
     :rtype: bool
     """
+
+    # Argument parser
+    if not gooey:
+        parser = argparse.ArgumentParser()
+    else:
+        parser = GooeyParser(description="ChArUco Online Calibration")
+
+    # input configuration file
+    if not gooey:
+        parser.add_argument("--configuration-file", "-cfg", "-i",
+                            nargs=1,
+                            action="store",
+                            dest="config",
+                            required=True,
+                            default="../flir/config_flir.cfg",
+                            help="Configuration file (JSON).",)
+    else:
+        parser.add_argument("--configuration-file", "-cfg", "-i",
+                            help="Configuration file (JSON)",
+                            widget='FileChooser',
+                            nargs=1,
+                            action="store",
+                            dest="config",
+                            default="../flir/config_flir.json",
+                            required=True)
+
+    # board definition
+    parser.add_argument("--squares_x",
+                        action="store",
+                        dest="squares_x",
+                        default=5,
+                        required=False,
+                        help="Number of squares in the x direction.")
+
+    parser.add_argument("--squares_y",
+                        action="store",
+                        dest="squares_y",
+                        default=7,
+                        required=False,
+                        help="Number of squares in the y direction.")
+
+    parser.add_argument("--square_length",
+                        action="store",
+                        dest="square_length",
+                        required=False,
+                        default=413,
+                        help="Square side length (in pixels).")
+
+    parser.add_argument("--marker_length",
+                        action="store",
+                        dest="marker_length",
+                        required=False,
+                        default=247,
+                        help="Marker side length (in pixels).")
+
+    parser.add_argument("--dictionary_id",
+                        action="store",
+                        dest="dictionary_id",
+                        default="6X6_250",
+                        required=False,
+                        help="ArUco Dictionary id.")
+
+    parser.add_argument("--max_images", "-N",
+                        action="store",
+                        dest="max_images",
+                        required=False,
+                        default=25,
+                        help="Maximum number of images to use.",)
+
+    parser.add_argument("--output", "-o",
+                        action="store",
+                        dest="output",
+                        required=True,
+                        default="flir_charuco_calibration.pkl",
+                        help="Output pickle file.",)
+
+    parser.add_argument("--calibrate_on_device",
+                        action="store_true",
+                        dest="calibrate_on_device",
+                        help="Run calibration .",)
+
+    args = parser.parse_args()
+
+    # call the main program
+    global max_images
+    max_images = int(args.max_images)
+
+    # parse parameters
+    squares_x = int(args.squares_x)  # number of squares in X direction
+    squares_y = int(args.squares_y)  # number of squares in Y direction
+    square_length = int(args.square_length)  # square side length (in pixels)
+    marker_length = int(args.marker_length)  # marker side length (in pixels)
+    dictionary_id = args.dictionary_id  # dictionary id
+
+    # create board
+    global dictionary
+    dict_id = getattr(cv2.aruco, "DICT_{}".format(dictionary_id))
+    dictionary = cv2.aruco.getPredefinedDictionary(dict_id)
+
+    # create the board instance
+    global board
+    board = cv2.aruco.CharucoBoard_create(
+        squares_x, squares_y, square_length, marker_length, dictionary)
+
+    # outputs
+    global calibrate_on_device
+    calibrate_on_device = args.calibrate_on_device
+
+    global output
+    output = args.output
+
     # verify if the input file exists,
     # if it does, then read it
     inp = args.config[0]
@@ -637,9 +793,10 @@ def main():
         # Release system instance
         system.ReleaseInstance()
 
-        print("Not enough cameras!")
-        input("Done! Press Enter to exit...")
-        return False
+        # print()
+        sys.exit("Not enough cameras!")
+        # input("Done! Press Enter to exit...")
+        # return False
 
     # Only support for 1 camera at the moment
     elif num_cameras == 1:
@@ -676,91 +833,5 @@ def main():
 
 
 if __name__ == "__main__":
-
-    # Argument parser
-    parser = argparse.ArgumentParser()
-
-    # input configuration file
-    parser.add_argument("--configuration-file", "-cfg", "-i",
-                        nargs=1,
-                        action="store",
-                        dest="config",
-                        required=True,
-                        help="Configuration JSON file.",)
-
-    # board definition
-    parser.add_argument("--squares_x",
-                        action="store",
-                        dest="squares_x",
-                        default=5,
-                        required=False,
-                        help="Number of squares in the x direction.")
-
-    parser.add_argument("--squares_y",
-                        action="store",
-                        dest="squares_y",
-                        default=7,
-                        required=False,
-                        help="Number of squares in the y direction.")
-
-    parser.add_argument("--square_length",
-                        action="store",
-                        dest="square_length",
-                        required=False,
-                        default=413,
-                        help="Square side length (in pixels).")
-
-    parser.add_argument("--marker_length",
-                        action="store",
-                        dest="marker_length",
-                        required=False,
-                        default=247,
-                        help="Marker side length (in pixels).")
-
-    parser.add_argument("--dictionary_id",
-                        action="store",
-                        dest="dictionary_id",
-                        default="6X6_250",
-                        required=False,
-                        help="ArUco Dictionary id.")
-
-    parser.add_argument("--max_images", "-N",
-                        action="store",
-                        dest="max_images",
-                        required=False,
-                        default=25,
-                        help="Maximum number of images to use.",)
-
-    parser.add_argument("--output", "-o",
-                        action="store",
-                        dest="output",
-                        required=True,
-                        help="Output pickle file.",)
-
-    parser.add_argument("--calibrate_on_device",
-                        action="store_true",
-                        dest="calibrate_on_device",
-                        help="Will calibrate on device, if parsed.",)
-
-    args = parser.parse_args()
-
-    # call the main program
-
-    max_images = int(args.max_images)
-
-    # parse parameters
-    squares_x = int(args.squares_x)  # number of squares in X direction
-    squares_y = int(args.squares_y)  # number of squares in Y direction
-    square_length = int(args.square_length)  # square side length (in pixels)
-    marker_length = int(args.marker_length)  # marker side length (in pixels)
-    dictionary_id = args.dictionary_id  # dictionary id
-
-    # create board
-    dict_id = getattr(cv2.aruco, "DICT_{}".format(dictionary_id))
-    dictionary = cv2.aruco.getPredefinedDictionary(dict_id)
-
-    # create the board instance
-    board = cv2.aruco.CharucoBoard_create(
-        squares_x, squares_y, square_length, marker_length, dictionary)
 
     main()
