@@ -34,7 +34,7 @@ year with a very similar similar set-up to the one described in this repository.
     + [Options](#options)
   * [3.3. Email Notifications (Optinal)](#33-email-notifications--optinal-)
 - [4. Capturing Frames](#4-capturing-frames)
-  * [4.1. Displaying the Camera Stream.](#41-displaying-the-camera-stream)
+  * [4.1. Displaying the Camera Stream](#41-displaying-the-camera-stream)
     + [FLIR Camera](#flir-camera)
     + [Raspberry Pi HQ Camera](#raspberry-pi-hq-camera)
     + [Desktop icon (Optinal)](#desktop-icon--optinal-)
@@ -45,7 +45,7 @@ year with a very similar similar set-up to the one described in this repository.
   * [5.1. Generating a ChArUco Board](#51-generating-a-charuco-board)
   * [5.2. Offline Calibration](#52-offline-calibration)
   * [5.3. Online Calibration](#53-online-calibration)
-  * [5.3. Display Calibration Results](#53-display-calibration-results)
+  * [5.4. Display Calibration Results](#54-display-calibration-results)
 - [6. Post Processing](#6-post-processing)
   * [6.1. Average and Variance Images](#61-average-and-variance-images)
   * [6.2. Brightest and darkest images](#62-brightest-and-darkest-images)
@@ -57,50 +57,6 @@ year with a very similar similar set-up to the one described in this repository.
   * [7.3 - Upside-down display](#73---upside-down-display)
 - [8. Future improvements](#8-future-improvements)
 - [9. Disclaimer](#9-disclaimer)
-- [Introduction](#introduction-1)
-- [Table of Contents](#table-of-contents-1)
-- [1. Hardware](#1-hardware-1)
-  * [1.1. Computer Board](#11-computer-board-1)
-  * [1.2. FLIR Machine Vision Camera](#12-flir-machine-vision-camera-1)
-  * [1.3 Raspberry Pi High Quality Camera (2021 update)](#13-raspberry-pi-high-quality-camera--2021-update--1)
-- [2. Software](#2-software-1)
-  * [2.1. Operating System (OS)](#21-operating-system--os--1)
-    + [2.1.1. Ubuntu Mate Installation](#211-ubuntu-mate-installation-1)
-  * [2.2. FLIR's SDK](#22-flir-s-sdk-1)
-    + [2.2.1. Dependencies](#221-dependencies-1)
-    + [2.2.2. Spinnaker Install](#222-spinnaker-install-1)
-    + [2.2.3. PySpin](#223-pyspin-1)
-  * [2.3 Raspberry Pi HQ Camera](#23-raspberry-pi-hq-camera-1)
-- [3. Image Capture Configuration File](#3-image-capture-configuration-file-1)
-  * [3.1 FLIR Camera](#31-flir-camera-1)
-  * [3.2 Raspberry Pi HQ Camera](#32-raspberry-pi-hq-camera-1)
-    + [Options](#options-1)
-  * [3.3. Email Notifications (Optinal)](#33-email-notifications--optinal--1)
-- [4. Capturing Frames](#4-capturing-frames-1)
-  * [4.1. Displaying the Camera Stream.](#41-displaying-the-camera-stream-1)
-    + [FLIR Camera](#flir-camera-1)
-    + [Raspberry Pi HQ Camera](#raspberry-pi-hq-camera-1)
-    + [Desktop icon (Optinal)](#desktop-icon--optinal--1)
-  * [4.2. Single Capture Cycle](#42-single-capture-cycle-1)
-  * [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles-1)
-  * [4.4. Controlling the Cameras Remotely](#44-controlling-the-cameras-remotely-1)
-- [5. Camera Calibration](#5-camera-calibration-1)
-- [5.1. Generating a ChArUco Board](#51-generating-a-charuco-board-1)
-- [5.2. Offline Calibration](#52-offline-calibration-1)
-- [5.3. Online Calibration](#53-online-calibration-1)
-- [5.3. Display Calibration Results](#53-display-calibration-results-1)
-- [6. Post Processing](#6-post-processing-1)
-  * [6.1. Average and Variance Images](#61-average-and-variance-images-1)
-  * [6.2. Brightest and darkest images](#62-brightest-and-darkest-images-1)
-  * [6.3. Rectification](#63-rectification-1)
-  * [6.4. Timestacks](#64-timestacks-1)
-- [7. Known issues](#7-known-issues-1)
-  * [7.1. FLIR Camera start up](#71-flir-camera-start-up-1)
-  * [7.2. `libmmal.so` issue on Ubuntu Mate 20.04](#72--libmmalso--issue-on-ubuntu-mate-2004-1)
-  * [7.3 - Upside-down display](#73---upside-down-display-1)
-- [8. Future improvements](#8-future-improvements-1)
-- [9. Disclaimer](#9-disclaimer-1)
-
 
 This tutorial assumes that you have some familiarity with the Linux command line
 and at least some basic understanding of python programming.
@@ -350,7 +306,7 @@ It's very hard to program FLIR's cameras, so I will only provide basic options h
         "resolution": [1920, 1080],
         "offset": [80, 236]
     },
-    "stream": {        
+    "stream": {
         "framerate": 30,
         "resolution": [640, 480]
     },
@@ -380,7 +336,7 @@ This camera provides a lot more options, such as ISO and a handy `beach` exposur
         "framerate": 10,
         "resolution": [1920, 1080]
     },
-    "stream": {        
+    "stream": {
         "framerate": 30,
         "resolution": [640, 480]
     },
@@ -646,7 +602,9 @@ python src/calibration/create_ChArUco_board.py
 
 The result is is as follows:
 
-<img src="doc/ChArUco_6X6_250.png" alt="drawing" width="500" class="center"/>
+<div align="center">
+<img src="doc/ChArUco_6X6_250.png" alt="drawing" width="500"/>
+</div>
 
 
 There are several parameters that can be set. Use `create_ChArUco_board.py --help` for details. Make sure to take note of which parameters were used to create the board because you will need to know then later!
