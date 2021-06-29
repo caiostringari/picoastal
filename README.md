@@ -700,7 +700,42 @@ This scripts converts the images to the `HSV` colour space and looks for the ima
 
 ## 6.3. Rectification
 
-Coming soon.
+**Warning:** I do not recommend running this program on the Raspberry pi. It's possible to do so, but everything will take forever and, unless you have a pi with 4Gb+ of RAM, you will run into memory issues very quickly.
+
+First, we will need `GDAL` to support exporting files to `geotiff`. On Ubuntu do:
+
+```bash
+sudo add-apt-repository ppa:ubuntugis/ppa
+sudo apt-get update
+sudo apt-get install gdal-bin
+sudo apt-get install libgdal-dev
+export CPLUS_INCLUDE_PATH=/usr/include/gdal
+export C_INCLUDE_PATH=/usr/include/gdal
+sudo apt install python3-gdal
+# sudo python3 -m pip install osgeo
+```
+
+To start the `GUI` (needs [Gooey](https://github.com/chriskiehl/Gooey)), do `python rectify.py`. You will be greeted with the following window:
+
+![](doc/rect_gui.png)
+
+If you (understandably) don't want to use the `GUI`, you can call the script with:
+
+```bash
+python rectify.py -i "input.png" -o "rectified.tiff" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --epsg "12345" --bbox "xmin,ymin,dx,dy"
+```
+
+Applying this code to the four statistical images calculaded above, we get:
+
+Average                  |  Variance
+:-------------------------:|:-------------------------:
+![](doc/average_rect.png)     |  ![](doc/variance_rect.png)
+
+Brightest                  |  Darkest
+:-------------------------:|:-------------------------:
+![](doc/brightest_rect.png)     |  ![](doc/darkest_rect.png)
+
+To see all command line the options, do `python rectify.py --help`.
 
 ## 6.4. Timestacks
 
