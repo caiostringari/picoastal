@@ -1,8 +1,8 @@
 """
-Rectify a given image.
+Create a timestack from a series of images.
 
-# SCRIPT   : rectify.py
-# POURPOSE : Rectify a given image.
+# SCRIPT   : timestack.py
+# POURPOSE : Create a timestack from a series of images.
 # AUTHOR   : Caio Eadi Stringari
 # DATE     : 29/06/2021
 # VERSION  : 1.0
@@ -15,6 +15,11 @@ import sys
 import json
 import argparse
 
+import datetime
+
+from glob import glob
+from natsort import natsorted
+
 import numpy as np
 
 import pickle
@@ -23,12 +28,14 @@ import cv2
 
 from scipy.interpolate import griddata
 
+from scipy.spatial import KDTree
+
+from tqdm import tqdm
+
 from matplotlib import path
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 
-from osgeo import gdal
-from osgeo import osr
 
 try:
     import gooey
@@ -66,7 +73,7 @@ else:
     image_dir = os.path.realpath('../../doc/')
     ArgumentParser = gooey.GooeyParser
     gui_decorator = gooey.Gooey(
-        program_name='Image Rectification',
+        program_name='Timestack Creator',
         default_size=[800, 480],
         navigation="TABBED",
         show_sidebar=True,
@@ -171,123 +178,25 @@ def rectify_image(img: np.ndarray, mtx: np.ndarray):
     return xy[:, 0].reshape(u.shape[:2]), xy[:, 1].reshape(v.shape[:2])
 
 
-def save_as_geotiff(grid_x: np.ndarray, grid_y: np.ndarray, dx: float,
-                    dy: float, rgb: np.ndarray, epsg: int, outfile: str):
-    """
-    Save output image as geotiff using GDAL.
-
-    Parameters
-    ----------
-    grid_x : np.ndarray
-        Grid x-coordinates.
-    grid_y : np.ndarray
-        Grid y-coordinates.
-    dx, dy : float
-        Grid resolution in x and y.
-    rgb : np.ndarray
-        Image data.
-    epsg : int
-        EPSG code for georefencing.
-    outfile : str
-        Output file name.
-
-    Returns
-    -------
-    None
-        Will write to file instead.
-    """
-    # set geotransform
-    nx = rgb.shape[0]
-    ny = rgb.shape[1]
-    geotransform = [grid_x.min(), dx, 0, grid_y.min(), 0, dy]
-
-    # create the 3-band raster file
-    dst_ds = gdal.GetDriverByName('GTiff').Create(
-        outfile, ny, nx, 3, gdal.GDT_Byte)
-
-    dst_ds.SetGeoTransform(geotransform)  # specify coords
-    srs = osr.SpatialReference()  # establish encoding
-    # EPSG:28356 - GDA94 / MGA zone 56 - Projected
-    srs.ImportFromEPSG(int(epsg))
-    dst_ds.SetProjection(srs.ExportToWkt())  # export coords to file
-
-    # write rgb bands to the raster
-    dst_ds.GetRasterBand(1).WriteArray(rgb[:, :, 0])
-    dst_ds.GetRasterBand(2).WriteArray(rgb[:, :, 1])
-    dst_ds.GetRasterBand(3).WriteArray(rgb[:, :, 2])
-
-    # write to disk
-    dst_ds.FlushCache()
-    dst_ds = None
-
-
-def plot(grid_x: np.ndarray, grid_y: np.ndarray, rgb: np.ndarray,
-         gcps: np.ndarray = None):
-    """
-    Plot the rectification results
-
-    Parameters
-    ----------
-    grid_x : np.ndarray
-        Grid x-coordinates.
-    grid_y : np.ndarray
-        Grid y-coordinates.
-    rgb : np.ndarray
-        Image data.
-    gcps : np.ndarray
-        Nx3 array with GCP coordinates. Optional.
-
-    Returns
-    -------
-    None
-        Will show plot on screen.
-    """
-
-    fig, ax = plt.subplots(figsize=(8, 8))
-
-    extent = [grid_x.min(), grid_x.max(), grid_y.min(), grid_y.max()]
-    ax.imshow(rgb, origin="lower", extent=extent, aspect="equal")
-
-    if len(gcps) > 0:
-        ax.scatter(gcps[:, 0], gcps[:, 1], color="r", lw=2, marker="+", s=50,
-                   label="GCPs")
-
-    ax.legend(fontsize=16)
-
-    ax.set_xlim(grid_x.min(), grid_x.max())
-    ax.set_ylim(grid_y.min(), grid_y.max())
-
-    ax.grid()
-    ax.set_aspect("equal")
-
-    ax.set_xlabel("x [m]", fontsize=16)
-    ax.set_ylabel("y [m]", fontsize=16)
-    ax.set_yticklabels(ax.get_yticks(), rotation=90, va="center", fontsize=16)
-    ax.set_xticklabels(ax.get_xticks(), rotation=0, ha="center", fontsize=16)
-
-    fig.tight_layout()
-    plt.show()
-
-
 @gui_decorator
 def main():
 
-    print("\nCreating image geometry, please wait...\n")
+    print("\nCreating a timestack, please wait...\n")
 
     # Argument parser
     if not gooey:
         parser = argparse.ArgumentParser()
     else:
-        parser = GooeyParser(description="Image Rectification")
+        parser = GooeyParser(description="Timestack Creator")
 
     # arguments
     if not gooey:
         parser.add_argument("--input", "-i",
                             action="store",
                             dest="input",
-                            default="../../doc/average.png",
+                            default="../../data/boomerang",
                             required=False,
-                            help="Input Image.",)
+                            help="Input folder with images.",)
 
         parser.add_argument("--camera_matrix", "-mtx",
                             action="store",
@@ -307,23 +216,23 @@ def main():
                             action="store",
                             dest="output",
                             required=False,
-                            default="rectified.tiff",
-                            help="Rectified image in geotiff format.")
+                            default="timestack.pkl",
+                            help="Timestack in pickle format.")
 
     else:  # add the same thing but a nicer widget
         parser.add_argument("--input", "-i",
                             action="store",
                             dest="input",
+                            default="../../data/boomerang",
                             required=False,
-                            help="Input image.",
-                            default="../../doc/average.png",
+                            help="Input folder with images.",
                             widget='FileChooser')
 
         parser.add_argument("--camera_matrix", "-mtx",
                             action="store",
                             dest="camera_matrix",
-                            required=False,
                             default="../../data/flir_tamron_8mm.json",
+                            required=False,
                             help="Camera Matrix in JSON or pickle format.",
                             widget='FileChooser')
 
@@ -339,9 +248,39 @@ def main():
                             action="store",
                             dest="output",
                             required=False,
-                            default="rectified.tiff",
-                            help="Rectified image in geotiff format.",
+                            default="timestack.pkl",
+                            help="Timestack in pickle format.",
                             widget='FileChooser')
+
+    parser.add_argument("--timestack_line",
+                        action="store",
+                        dest="stackline",
+                        required=False,
+                        default="457315.2,6422161.5,457599.4,6422063.6",
+                        help="Coordinates of the timestack line. Format is"
+                             "\'x1,y1,x2,y2\'.")
+
+    parser.add_argument("--start_time",
+                        action="store",
+                        dest="start_time",
+                        required=False,
+                        default="20200101:000000",
+                        help="Start time in YYYYMMDD:HHMMSS format. "
+                             "Default is {20200101:000000}")
+
+    parser.add_argument("--frequency", "-fps",
+                        action="store",
+                        dest="aquisition_frequency",
+                        required=False,
+                        default=2,
+                        help="Aquistion frequency in Hz. Default is 2Hz.")
+
+    parser.add_argument("--image_format",
+                        action="store",
+                        dest="image_format",
+                        required=False,
+                        default="jpg",
+                        help="Input images format. Default is jpg.")
 
     parser.add_argument("--projection_height",
                         action="store",
@@ -356,38 +295,26 @@ def main():
                         dest="reprojection_error",
                         help="Compute the re-projection errors.")
 
-    parser.add_argument("--bbox", "-bbox",
+    parser.add_argument("--npoints",
                         action="store",
-                        dest="bbox",
-                        required=False,
-                        default="457237.72,6421856.5,500,500",
-                        help="Bounding box to cut the data. Format is "
-                             "\'bottom_left,bottom_right,dx,dy\'",)
+                        dest="npoints",
+                        default=1024,
+                        help="Number of points in the timestack. "
+                             "Default is 1024.")
 
-    parser.add_argument("--epsg",
+    parser.add_argument("--neighbours", "-nn",
                         action="store",
-                        dest="epsg",
-                        required=False,
-                        default="28356",
-                        help="EPSG code to georefence the output tiff.",)
-
-    parser.add_argument("--method",
-                        action="store",
-                        dest="interp_method",
-                        default="nearest",
-                        help="Interpolation method. Default is nearest.")
-
-    parser.add_argument("--dx", "-dx",
-                        action="store",
-                        dest="dx",
+                        dest="neighbours",
                         default=1,
-                        help="Grid resolution (x) in meters. Default is 1m.")
+                        help="Number of nearest neighbours to consider. "
+                             "Default is 1024.")
 
-    parser.add_argument("--dy", "-dy",
+    parser.add_argument("--statistic",
                         action="store",
-                        dest="dy",
-                        default=1,
-                        help="Grid resolution (y) in meters. Default is 1m.")
+                        dest="statistic",
+                        default="mean",
+                        help="Which statistic to use to compute if neighbours "
+                             ">1. Default is np.mean.")
 
     parser.add_argument("--show_results", "-show",
                         action="store_true",
@@ -408,18 +335,28 @@ def main():
             mtx = cam["camera_matrix"]
             dist = cam["distortion_coefficients"]
 
-    # read image
-    img = cv2.cvtColor(cv2.imread(args.input), cv2.COLOR_BGR2RGB)
+    # parse time and FPS
+    start_date = datetime.datetime.strptime(args.start_time, "%Y%m%d:%H%M%S")
+    freq = float(args.aquisition_frequency)
 
-    # undistort
-    h,  w = img.shape[:2]
-    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(
-        mtx, dist, (w, h), 1, (w, h))
+    # search for images
+    images = natsorted(glob(args.input + "/*{}".format(args.image_format)))
+    start = datetime.datetime.now()
+    print(f"  -- Found {len(images)} images, starting at {start}")
+    first_img = cv2.imread(images[0])
 
-    # undistort image
-    dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
+    # build the timestack line
+    npoints = int(args.npoints)
+    stackline = args.stackline.split(",")
+    stackline = np.array([float(stackline[0]), float(stackline[1]),
+                          float(stackline[2]), float(stackline[3])])
+    stack_x = np.linspace(stackline[0], stackline[2], npoints)
+    stack_y = np.linspace(stackline[1], stackline[3], npoints)
+    stack_points = np.vstack([stack_x, stack_y]).T
+    stack_length = np.sqrt(
+        (stack_x[-1] - stack_x[0])**2 - (stack_y[-1] - stack_y[0])**2)
 
-    # read coordinates
+    # read gcp coordinates
     xyz = []
     uv = []
     f = open(args.gcps, "r")
@@ -442,63 +379,108 @@ def main():
 
     error, H = find_homography(uv, xyz, mtx, dist_coeffs=dist, z=pheight,
                                compute_error=args.reprojection_error)
-    ximg, yimg = rectify_image(img, H)
+    ximg, yimg = rectify_image(first_img, H)
     if error:
         print(f"  -- Re-projection error is {round(error, 1)} pixels")
 
     # image coordinate points
     XY = np.vstack([ximg.flatten(), yimg.flatten()]).T
 
-    # bounding box
-    bbox = args.bbox.split(",")
-    bbox = np.array([float(bbox[0]), float(bbox[1]),
-                     float(bbox[2]), float(bbox[3])])
+    # build the searching tree
+    Tree = KDTree(XY)
 
-    # mask points outside the bounding box
-    rect = patches.Rectangle((bbox[0], bbox[1]), bbox[2], bbox[3],
-                             linewidth=2, edgecolor='r', facecolor='none')
+    # search for nearest points to the timestack line
+    neighbours = int(args.neighbours)
 
-    insiders = rect.contains_points(XY)
-    insiders_idx = np.arange(0, len(XY), 1)[insiders]
-    outsiders_idx = np.arange(0, len(XY), 1)[~insiders]
-    iimg, jimg = np.unravel_index(outsiders_idx, ximg.shape)
+    _, stack_indexes = Tree.query(stack_points, neighbours)
+    istk, jstk = np.unravel_index(stack_indexes, ximg.shape)
 
-    # copy and mask
-    ximg_m = ximg.copy()
-    yimg_m = yimg.copy()
-    img_m = img.copy()
-    dst_m = dst.copy()
+    if args.statistic == "mean":
+        operator = np.mean
+    elif args.statistic == "median":
+        operator = np.median
+    elif args.statistic == "max":
+        operator = np.max
+    elif args.statistic == "min":
+        operator = np.min
+    elif args.statistic == "deviation":
+        operator = np.std
+    elif args.statistic == "variance":
+        operator = np.var
+    else:
+        print("  -- warning: unknown statistic for n. of neighbours > 1, "
+              "falling back to np.mean.")
+        operator = np.mean
 
-    ximg_m[iimg, jimg] = np.ma.masked
-    yimg_m[iimg, jimg] = np.ma.masked
-    img_m[iimg, jimg, :] = np.ma.masked
-    dst_m[iimg, jimg, :] = np.ma.masked
+    # < timeloop >
 
-    print("\n  -- Interpolating, please wait...")
-    # interpolate
-    points = XY[insiders_idx, :]
+    pbar = tqdm(total=len(images))
 
-    dx = float(args.dx)
-    dy = float(args.dy)
-    grid_x, grid_y = np.meshgrid(np.arange(bbox[0], bbox[0] + bbox[2], dx),
-                                 np.arange(bbox[1], bbox[1] + bbox[3], dy))
+    stack_sec = 0
+    stack_now = start_date
 
-    values = np.vstack([dst_m[:, :, 0].flatten()[insiders_idx],
-                        dst_m[:, :, 1].flatten()[insiders_idx],
-                        dst_m[:, :, 2].flatten()[insiders_idx]]).T
-    rgb = griddata(points,
-                   values,
-                   (grid_x, grid_y),
-                   method=args.interp_method).clip(0, 255)
+    rgb_stack = []
+    stack_datetimes = []
+    stack_seconds = []
 
-    # output
-    save_as_geotiff(grid_x, grid_y, dx, dy, rgb, args.epsg, args.output)
+    for i, image in enumerate(images):
+
+        # read the image
+        img = cv2.cvtColor(cv2.imread(image), cv2.COLOR_BGR2RGB)
+
+        # undistort
+        h,  w = img.shape[:2]
+        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(
+            mtx, dist, (w, h), 1, (w, h))
+
+        # undistort image
+        dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
+        dst = dst / 255.  # to float
+
+        # extract points
+        if neighbours == 1:
+            rgb_stack.append(dst[istk, jstk, :])
+        else:
+            rgb_stack.append(operator(dst[istk, jstk, :], axis=1))
+
+        # time increment
+        dt = datetime.timedelta(seconds=1 / freq)
+        stack_datetimes.append(stack_now)
+        stack_seconds.append(stack_sec)
+        stack_now += dt
+        stack_sec += 1 / freq
+
+        pbar.update()
+    pbar.close()
+
+    # to arrays
+    rgb_stack = np.array(rgb_stack)
+    rgb_stack = np.swapaxes(rgb_stack, 0, 1)
+    stack_times = np.array(stack_datetimes)
+    stack_seconds = np.array(stack_seconds)
+
+    # output goes here
+    out = {}
+    out["seconds"] = stack_seconds
+    out["time"] = stack_times
+    out["rgb"] = rgb_stack
+    out["coordinates"] = stack_points
+    out["length"] = stack_length
+    out["points"] = npoints
+    out["neighbours"] = neighbours
+    out["statistic"] = args.statistic
+    with open(args.output, 'wb') as f:
+        pickle.dump(out, f)
 
     # plot
     if args.show:
-        plot(grid_x, grid_y, rgb, gcps=xyz)
-
-    print("\nMy work is done!\n")
+        fig, ax = plt.subplots(figsize=(12, 6))
+        ax.imshow(rgb_stack, extent=[0, stack_length, 0, stack_seconds.max()],
+                  origin="lower")
+        ax.set_xlabel("Time [s]")
+        ax.set_ylabel("Distance [m]")
+        fig.tight_layout()
+        plt.show()
 
 
 if __name__ == '__main__':

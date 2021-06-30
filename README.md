@@ -712,17 +712,17 @@ sudo apt-get install libgdal-dev
 export CPLUS_INCLUDE_PATH=/usr/include/gdal
 export C_INCLUDE_PATH=/usr/include/gdal
 sudo apt install python3-gdal
-# sudo python3 -m pip install osgeo
 ```
 
-To start the `GUI` (needs [Gooey](https://github.com/chriskiehl/Gooey)), do `python rectify.py`. You will be greeted with the following window:
+To start the `GUI` (make sure to ahve [Gooey](https://github.com/chriskiehl/Gooey) installed), do `python3 rectify.py`. You will be greeted with the following window:
 
 ![](doc/rect_gui.png)
 
-If you (understandably) don't want to use the `GUI`, you can call the script with:
+If you don't want to use the `GUI`, you can call the script with:
 
 ```bash
-python rectify.py -i "input.png" -o "rectified.tiff" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --epsg "12345" --bbox "xmin,ymin,dx,dy"
+cd ~/picoastal/
+python3 src/post/rectify.py -i "input.png" -o "rectified.tiff" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --epsg "12345" --bbox "xmin,ymin,dx,dy"
 ```
 
 Applying this code to the four statistical images calculaded above, we get:
@@ -730,16 +730,31 @@ Applying this code to the four statistical images calculaded above, we get:
 Average                  |  Variance
 :-------------------------:|:-------------------------:
 ![](doc/average_rect.png)     |  ![](doc/variance_rect.png)
-
 Brightest                  |  Darkest
-:-------------------------:|:-------------------------:
 ![](doc/brightest_rect.png)     |  ![](doc/darkest_rect.png)
 
-To see all command line the options, do `python rectify.py --help`.
+To see all command line the options, do `python3 rectify.py --help`.
 
 ## 6.4. Timestacks
 
-Coming soon.
+To extract  a timestack, do:
+
+```bash
+cd ~/picoastal/
+python3 src/post/timestack.py -i "path/to/images" -o "timestack.pkl" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --stackline "457315.2,6422161.5,457599.4,6422063.6"
+```
+
+To use the `GUI`, call the script without arguments `python3 timestack.py`:
+
+![](doc/timestack_gui.png)
+
+To see all command line the options, do `python3 timestack.py --help`.
+
+The resulting stack (using `plot_timestack.py`) looks something like this:
+
+![](doc/timestack.png)
+
+It may not tbe he most beautiful timestack ever but our code can now provide all the main functionalities as the most powerful comercial options available.
 
 # 7. Known issues
 
