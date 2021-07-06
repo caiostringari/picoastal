@@ -23,7 +23,6 @@ import cv2
 
 from scipy.interpolate import griddata
 
-from matplotlib import path
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 

@@ -11,52 +11,54 @@ The image below was captured at Boomerang Beach (New South Wales) in early 2019
 year with a very similar similar set-up to the one described in this repository.
 
 ![](doc/boomerang.jpg)
-
+0
 # Table of Contents
 
 - [Introduction](#introduction)
 - [Table of Contents](#table-of-contents)
 - [1. Hardware](#1-hardware)
-  * [1.1. Computer Board](#11-computer-board)
-  * [1.2. FLIR Machine Vision Camera](#12-flir-machine-vision-camera)
-  * [1.3 Raspberry Pi High Quality Camera (2021 update)](#13-raspberry-pi-high-quality-camera--2021-update-)
+  - [1.1. Computer Board](#11-computer-board)
+  - [1.2. FLIR Machine Vision Camera](#12-flir-machine-vision-camera)
+  - [1.3 Raspberry Pi High Quality Camera (2021 update)](#13-raspberry-pi-high-quality-camera-2021-update)
 - [2. Software](#2-software)
-  * [2.1. Operating System (OS)](#21-operating-system--os-)
-    + [2.1.1. Ubuntu Mate Installation](#211-ubuntu-mate-installation)
-  * [2.2. FLIR's SDK](#22-flir-s-sdk)
-    + [2.2.1. Dependencies](#221-dependencies)
-    + [2.2.2. Spinnaker Install](#222-spinnaker-install)
-    + [2.2.3. PySpin](#223-pyspin)
-  * [2.3 Raspberry Pi HQ Camera](#23-raspberry-pi-hq-camera)
+  - [2.1. Operating System (OS)](#21-operating-system-os)
+    - [2.1.1. Ubuntu Mate Installation](#211-ubuntu-mate-installation)
+  - [2.2. FLIR's SDK](#22-flirs-sdk)
+    - [2.2.1. Dependencies](#221-dependencies)
+    - [2.2.2. Spinnaker Install](#222-spinnaker-install)
+    - [2.2.3. PySpin](#223-pyspin)
+  - [2.3 Raspberry Pi HQ Camera](#23-raspberry-pi-hq-camera)
 - [3. Image Capture Configuration File](#3-image-capture-configuration-file)
-  * [3.1 FLIR Camera](#31-flir-camera)
-  * [3.2 Raspberry Pi HQ Camera](#32-raspberry-pi-hq-camera)
-    + [Options](#options)
-  * [3.3. Email Notifications (Optinal)](#33-email-notifications--optinal-)
+  - [3.1 FLIR Camera](#31-flir-camera)
+  - [3.2 Raspberry Pi HQ Camera](#32-raspberry-pi-hq-camera)
+    - [Options](#options)
+  - [3.3. Email Notifications (Optinal)](#33-email-notifications-optinal)
 - [4. Capturing Frames](#4-capturing-frames)
-  * [4.1. Displaying the Camera Stream](#41-displaying-the-camera-stream)
-    + [FLIR Camera](#flir-camera)
-    + [Raspberry Pi HQ Camera](#raspberry-pi-hq-camera)
-    + [Desktop icon (Optinal)](#desktop-icon--optinal-)
-  * [4.2. Single Capture Cycle](#42-single-capture-cycle)
-  * [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
-  * [4.4. Controlling the Cameras Remotely](#44-controlling-the-cameras-remotely)
+  - [4.1. Displaying the Camera Stream](#41-displaying-the-camera-stream)
+    - [FLIR Camera](#flir-camera)
+    - [Raspberry Pi HQ Camera](#raspberry-pi-hq-camera)
+    - [Desktop icon (Optinal)](#desktop-icon-optinal)
+  - [4.2. Single Capture Cycle](#42-single-capture-cycle)
+  - [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
+  - [4.4. Controlling the Cameras Remotely](#44-controlling-the-cameras-remotely)
 - [5. Camera Calibration](#5-camera-calibration)
-  * [5.1. Generating a ChArUco Board](#51-generating-a-charuco-board)
-  * [5.2. Offline Calibration](#52-offline-calibration)
-  * [5.3. Online Calibration](#53-online-calibration)
-  * [5.4. Display Calibration Results](#54-display-calibration-results)
-- [6. Post Processing](#6-post-processing)
-  * [6.1. Average and Variance Images](#61-average-and-variance-images)
-  * [6.2. Brightest and darkest images](#62-brightest-and-darkest-images)
-  * [6.3. Rectification](#63-rectification)
-  * [6.4. Timestacks](#64-timestacks)
-- [7. Known issues](#7-known-issues)
-  * [7.1. FLIR Camera start up](#71-flir-camera-start-up)
-  * [7.2. `libmmal.so` issue on Ubuntu Mate 20.04](#72--libmmalso--issue-on-ubuntu-mate-2004)
-  * [7.3 - Upside-down display](#73---upside-down-display)
+  - [5.1. Generating a ChArUco Board](#51-generating-a-charuco-board)
+  - [5.2. Offline Calibration](#52-offline-calibration)
+  - [5.3. Online Calibration](#53-online-calibration)
+  - [6.2. Brightest and darkest images](#62-brightest-and-darkest-images)
+  - [6.3. Rectification](#63-rectification)
+  - [6.4. Timestacks](#64-timestacks)
+  - [6.5 Graphical User Interfaces (GUIs)](#65-graphical-user-interfaces-guis)
+- [7. Machine Learning](#7-machine-learning)
+  - [7.1 People Detector](#71-people-detector)
+  - [7.2 Active Wave Breaking Segmentation](#72-active-wave-breaking-segmentation)
+- [8. Known issues](#8-known-issues)
+  - [7.1. FLIR Camera start up](#71-flir-camera-start-up)
+  - [7.2. `libmmal.so` issue on Ubuntu Mate 20.04](#72-libmmalso-issue-on-ubuntu-mate-2004)
+  - [7.3 - Upside-down display](#73---upside-down-display)
 - [8. Future improvements](#8-future-improvements)
 - [9. Disclaimer](#9-disclaimer)
+
 
 This tutorial assumes that you have some familiarity with the Linux command line
 and at least some basic understanding of python programming.
@@ -581,17 +583,6 @@ Controlling the cameras remotely is quite easy. All you need to do is to make su
 
 Properly calibrating a camera is hard! To try to make it easier, the [`ChArUco`](https://docs.opencv.org/3.4/df/d4a/tutorial_charuco_detection.html) calibration model is recommended here. This method is advantageous over the traditional chessboard method because each marker on the calibration board can be tracked individually.
 
-The scripts below have an optional graphical interface. To use it, you need to install [Gooey](https://github.com/chriskiehl/Gooey). On a `x86_64` machine you can simply do:
-
-
-```bash
-sudo python3 -m pip install https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04/wxPython-4.1.1-cp38-cp38-linux_x86_64.whl
-sudo python3 -m pip install Gooey
-```
-
-On the Raspberry Pi, you will need to compile [Wx from the source](https://wiki.wxpython.org/BuildWxPythonOnRaspberryPi), clone [Gooey](https://github.com/chriskiehl/Gooey) and install using `python3 setup.py install`. To activate the GUI, simply call the scripts with no arguments.
-
-
 ## 5.1. Generating a ChArUco Board
 
 Each `ChArUco` board is unique. To create one with the default configuration, do:
@@ -635,8 +626,6 @@ python src/calibration/ChArUco_online_calibration_rpi.py - i "config.json" -o "c
 
 As usual, there are several parameters that can be set. Use `ChArUco_online_calibration_flir|rpi.py --help` for details. The most import thing for camera calibration is to use the same board parameters as used for `create_ChArUco_board.py`
 
-## 5.4. Display Calibration Results
-
 To investigate the results of a camera calibration do:
 
 ```
@@ -677,9 +666,9 @@ python3 src/post/variance.py -i "data/boomerang" -o "variance.png"
 ```
 The results should look like this:
 
-Average                    |  Variance
-:-------------------------:|:-------------------------:
-![](doc/average.png)       |  ![](doc/variance.png)
+|       Average        |       Variance        |
+| :------------------: | :-------------------: |
+| ![](doc/average.png) | ![](doc/variance.png) |
 
 
 ## 6.2. Brightest and darkest images
@@ -692,9 +681,9 @@ python3 src/post/brightest_and_darkest.py -i "data/boomerang" -b "brightest.png"
 ```
 The result should look like this:
 
-Brightest                  |  Darkest
-:-------------------------:|:-------------------------:
-![](doc/brightest.png)     |  ![](doc/darkest.png)
+|       Brightest        |       Darkest        |
+| :--------------------: | :------------------: |
+| ![](doc/brightest.png) | ![](doc/darkest.png) |
 
 This scripts converts the images to the `HSV` colour space and looks for the images with summed highest and lowest brightness (i.e., the `V` in the `HSV`).
 
@@ -706,32 +695,26 @@ First, we will need `GDAL` to support exporting files to `geotiff`. On Ubuntu do
 
 ```bash
 sudo add-apt-repository ppa:ubuntugis/ppa
-sudo apt-get update
-sudo apt-get install gdal-bin
-sudo apt-get install libgdal-dev
-export CPLUS_INCLUDE_PATH=/usr/include/gdal
-export C_INCLUDE_PATH=/usr/include/gdal
-sudo apt install python3-gdal
+sudo apt update
+sudo apt install gdal-bin ibgdal-dev python3-gdal
 ```
 
-To start the `GUI` (make sure to ahve [Gooey](https://github.com/chriskiehl/Gooey) installed), do `python3 rectify.py`. You will be greeted with the following window:
-
-![](doc/rect_gui.png)
-
-If you don't want to use the `GUI`, you can call the script with:
+Example:
 
 ```bash
 cd ~/picoastal/
 python3 src/post/rectify.py -i "input.png" -o "rectified.tiff" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --epsg "12345" --bbox "xmin,ymin,dx,dy"
 ```
 
-Applying this code to the four statistical images calculaded above, we get:
+Applying this code to the four statistical images calculated above, we get:
 
-Average                  |  Variance
-:-------------------------:|:-------------------------:
-![](doc/average_rect.png)     |  ![](doc/variance_rect.png)
-Brightest                  |  Darkest
-![](doc/brightest_rect.png)     |  ![](doc/darkest_rect.png)
+|          Average          |          Variance          |
+| :-----------------------: | :------------------------: |
+| ![](doc/average_rect.png) | ![](doc/variance_rect.png) |
+
+|          Brightest          |          Darkest          |
+| :-------------------------: | :-----------------------: |
+| ![](doc/brightest_rect.png) | ![](doc/darkest_rect.png) |
 
 To see all command line the options, do `python3 rectify.py --help`.
 
@@ -744,23 +727,83 @@ cd ~/picoastal/
 python3 src/post/timestack.py -i "path/to/images" -o "timestack.pkl" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --stackline "457315.2,6422161.5,457599.4,6422063.6"
 ```
 
-To use the `GUI`, call the script without arguments `python3 timestack.py`:
-
-![](doc/timestack_gui.png)
-
 To see all command line the options, do `python3 timestack.py --help`.
 
 The resulting stack (using `plot_timestack.py`) looks something like this:
 
 ![](doc/timestack.png)
 
-It may not tbe he most beautiful timestack ever but our code can now provide all the main functionalities as the most powerful comercial options available.
+It may not the he most beautiful timestack ever but our code can now provide all the main functionalities as the most powerful commercial options available.
 
-# 7. Known issues
+## 6.5 Graphical User Interfaces (GUIs)
+
+Some scripts have a handy GUI that makes setting parameters much easier. To use it, you need to install [Gooey](https://github.com/chriskiehl/Gooey). On a `x86_64` machine you can simply do:
+
+
+```bash
+sudo python3 -m pip install https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04/wxPython-4.1.1-cp38-cp38-linux_x86_64.whl
+sudo python3 -m pip install Gooey
+```
+
+On the Raspberry Pi, you will need to compile [Wx from the source](https://wiki.wxpython.org/BuildWxPythonOnRaspberryPi), clone [Gooey](https://github.com/chriskiehl/Gooey) and install using `python3 setup.py install`. To activate the GUI, call the script without arguments `python3 script.py`. You will be greeted by something like this:
+
+![](doc/rect_gui.png)
+
+The scripts that support the `GUI` are:
+
+  - rectify.py
+  - timestack.py
+  - ChArUco_online_calibration_rpi.py
+  - ChArUco_online_calibration_flir.py
+  - calib_ChArUco_offline.py
+
+# 7. Machine Learning
+
+Two machine learning models are provided here. The first model is a simple people detector. The second model is an active wave breaking segmentation model. Neither model can be run in real time on the Raspberry Pi without sacrificing too much FPS. Running these models in real-time resulted in less than 1 FPS which is unusable for coastal monitoring applications.
+
+## 7.1 People Detector
+
+This model is based on [Tensorflow's implementation](https://github.com/tensorflow/examples/tree/master/lite/examples/image_classification/raspberry_pi). To run the script, you will need to manually download one the latest versions of EfficientDetect models:
+
+- [EfficientNet-Lite0](https://tfhub.dev/tensorflow/efficientdet/lite0/detection/1)
+- [EfficientNet-Lite1](https://tfhub.dev/tensorflow/efficientdet/lite1/detection/1)
+- [EfficientNet-Lite2](https://tfhub.dev/tensorflow/efficientdet/lite2/detection/1)
+- [EfficientNet-Lite3](https://tfhub.dev/tensorflow/efficientdet/lite3/detection/1)
+- [EfficientNet-Lite4](https://tfhub.dev/tensorflow/efficientdet/lite4/detection/2)
+
+
+Make sur to install tensorflow-lite before running this scripts with `sudo python3 -m pip install --index-url https://google-coral.github.io/py-repo/ tflite_runtime`
+
+These models can detect people with reasonable accuracy but do not expect great results out-of-the-box. In my experience, even the best model (Lite4) misses about 50% of the visible people in the image.
+
+To run the script, do:
+
+```bash
+cd ~/picoastal/
+python3 offline_people_detector.py --model "lite-model_efficientdet_lite4_detection_default_2.tflite" --model_labels "coco_labels.txt" -i "path/to/images" -o "detections.csv" -threshold 0.3 --display --save_images "path/to/images_with_detections/"
+```
+
+Using data collected with a very early version of the system equipped the FLIR camera, the results look like this:
+
+
+![](doc/people_tracking.gif)
+
+## 7.2 Active Wave Breaking Segmentation
+
+This model aims to classify each pixel of the image in which waves that are activelly breaking are happening. It was developed during my post-doc at France Energies Marines and is avaliable from [deepwaves](https://github.com/caiostringari/deepwaves). It was trained with deep-water data so the performance with surf zone data is not expected to be very good.
+
+```bash
+cd ~/picoastal/
+python3 offline_wave_breaking_segmention.py --model "seg_xception.h5" -i "path/to/images/" -o "pixels.csv" --save-plots -roi 1250 350 400 150 -N 500 --plot-path "path/to/results"
+```
+
+![](doc/wave_breaking_segmentation.gif)
+
+# 8. Known issues
 
 ## 7.1. FLIR Camera start up
 
-More often than not, the FLIR camera does not start properly and you get a weird black and white image. The only way I found to fix this was to open `spinview` and set the parameter below to `Auto`:
+More often then not, the FLIR camera does not start properly and you get a weird black and white image. The only way I found to fix this was to open `spinview` and set the parameter below to `Auto`:
 
 ![](doc/spinview_issue1.png)
 
@@ -797,7 +840,7 @@ To make it permanent, open the system configuration panel and search for `displa
 
 # 8. Future improvements
 
-1. Add the ability to handle more than one camera
+I am open to suggestions. Keep in mind that I work in this project during my spare time and do no have access to much hardware, specially surveying gear. 
 
 # 9. Disclaimer
 

@@ -78,8 +78,7 @@ else:
         navigation="TABBED",
         show_sidebar=True,
         image_dir=image_dir,
-        suppress_gooey_flag=True,
-    )
+        suppress_gooey_flag=True)
 # <<< END GUI >>>
 
 
@@ -226,7 +225,7 @@ def main():
                             default="../../data/boomerang",
                             required=False,
                             help="Input folder with images.",
-                            widget='FileChooser')
+                            widget='DirChooser')
 
         parser.add_argument("--camera_matrix", "-mtx",
                             action="store",
@@ -250,7 +249,7 @@ def main():
                             required=False,
                             default="timestack.pkl",
                             help="Timestack in pickle format.",
-                            widget='FileChooser')
+                            widget='FileSaver')
 
     parser.add_argument("--timestack_line",
                         action="store",

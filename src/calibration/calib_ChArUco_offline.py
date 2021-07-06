@@ -134,7 +134,7 @@ def main():
                             required=True,
                             help="Input folder with images "
                                  "or pickle file with corners and ids.",
-                            widget='FileChooser')
+                            widget='DirChooser')
 
     # calibration from detected corners
     parser.add_argument("--from_corners",

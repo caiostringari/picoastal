@@ -51,7 +51,7 @@ if __name__ == '__main__':
     rvecs = x["rotation_vectors"]
     tvecs = x["translation_vectors"]
     frame = x["last_frame"]
-    sizee = x["board_size"]
+    size = x["board_size"]
 
     # undistort
     h,  w = frame.shape[:2]
