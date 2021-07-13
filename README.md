@@ -696,7 +696,7 @@ First, we will need `GDAL` to support exporting files to `geotiff`. On Ubuntu do
 ```bash
 sudo add-apt-repository ppa:ubuntugis/ppa
 sudo apt update
-sudo apt install gdal-bin ibgdal-dev python3-gdal
+sudo apt install gdal-bin libgdal-dev python3-gdal
 ```
 
 Example:
@@ -735,7 +735,12 @@ The resulting stack (using `plot_timestack.py`) looks something like this:
 
 It may not the he most beautiful timestack ever but our code can now provide all the main functionalities as the most powerful commercial options available.
 
-## 6.5 Graphical User Interfaces (GUIs)
+## 6.5 Optical Flow
+
+Work in progress.
+
+
+## 6.6 Graphical User Interfaces (GUIs)
 
 Some scripts have a handy GUI that makes setting parameters much easier. To use it, you need to install [Gooey](https://github.com/chriskiehl/Gooey). On a `x86_64` machine you can simply do:
 

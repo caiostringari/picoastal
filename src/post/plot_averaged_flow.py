@@ -1,12 +1,14 @@
 """
-Plot averaged optical flow vectors
+Plot averaged optical flow vectors.
 
 # SCRIPT   : plot_averaged_flow.py
-# POURPOSE : Create a timestack from a series of images.
+# POURPOSE : Plot averaged optical flow vectors.
 # AUTHOR   : Caio Eadi Stringari
-# DATE     : 09/07/2021
+# DATE     : 13/07/2021
 # VERSION  : 1.0
 """
+
+import argparse
 
 import xarray as xr
 
@@ -18,25 +20,68 @@ import numpy as np
 
 from tqdm import tqdm
 
-from matplotlib import path
 from matplotlib import colors as mcolors
-import matplotlib.patches as patches
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 import matplotlib.pyplot as plt
 
-
-def scale_array(x, srcRange, dstRange):
-    """Scale a variable to a new range."""
-    return ((x - srcRange[0]) * (dstRange[1] - dstRange[0]) /
-            (srcRange[1] - srcRange[0]) + dstRange[0])
+import warnings
+warnings.filterwarnings("ignore")
 
 
 if __name__ == '__main__':
 
-    dt = (1/2) # 1 over sample rate
+    parser = argparse.ArgumentParser()
 
-    img = plt.imread("average.tiff")
+    parser.add_argument("--input", "-i",
+                        action="store",
+                        dest="input",
+                        default="flow.nc",
+                        required=False,
+                        help="Input netcdf file.")
 
-    ds = xr.open_dataset("flow.nc")
+    parser.add_argument("--step", "-dx",
+                        action="store",
+                        dest="step",
+                        default=10,
+                        required=False,
+                        help="Step for plotting vectors.")
+
+    parser.add_argument("--speed_cut", "-cut",
+                        action="store",
+                        dest="cut",
+                        default=2,
+                        required=False,
+                        help="Maximun speed value.")
+
+    parser.add_argument("--output", "-o",
+                        action="store",
+                        dest="output",
+                        default="flow.png",
+                        required=False,
+                        help="Output figure name.")
+
+    parser.add_argument("--average", "-a",
+                        action="store",
+                        dest="average",
+                        default="average.tiff",
+                        required=False,
+                        help="Average image to overlay on.")
+
+    args = parser.parse_args()
+
+    CUT = float(args.cut)
+    step = int(args.step)
+
+    # try to read the average image
+    try:
+        img = plt.imread(args.average)
+        has_avg = True
+    except Exception:
+        has_avg = False
+
+    # read the data
+    ds = xr.open_dataset(args.input)
     x = ds["x"].values
     y = ds["y"].values
     grid_x, grid_y = np.meshgrid(x, y)
@@ -62,37 +107,30 @@ if __name__ == '__main__':
     u_mean = Wu.mean
     v_mean = Wv.mean
 
-    u_mean[u_mean > 2] == 0
-    v_mean[v_mean > 2] == 0
+    u_mean[u_mean > CUT] == np.nan
+    v_mean[v_mean > CUT] == np.nan
 
-    u_mean[np.where(img[...,1] == 0)] = 0
-    v_mean[np.where(img[...,1] == 0)] = 0
-
-    # magnitude is how much the pixel moved
-    mag, ang = cv2.cartToPolar(u_mean, v_mean)
-    mag /= dt  # this is the velocity
-
-    # ones = np.ones(ang.shape).astype(type(mag[0][0]))
-    # unorm, vnorm = cv2.polarToCart(ones, ang)
-    #
-    # magnorm = scale_array(mag, (mag.min(), mag.max()), (0, 1))
-    norm = mcolors.Normalize(vmin=0, vmax=2., clip=True)
+    # compute the speed
+    mag = np.sqrt(u_mean**2 + v_mean**2)
+    
+    norm = mcolors.Normalize(vmin=0, vmax=CUT, clip=True)
 
     # plot
-    step = 10
     fig, ax = plt.subplots(figsize=(10, 10))
 
     m = ax.quiver(grid_x[::step, ::step],
                   grid_y[::step, ::step],
                   u_mean[::step, ::step],
                   v_mean[::step, ::step], mag[::step, ::step],
-                  cmap="Greys", norm=norm)
-
-    extent = [grid_x.min(), grid_x.max(), grid_y.min(), grid_y.max()]
-    ax.imshow(img, origin="lower", extent=extent, aspect="equal")
-
-    plt.colorbar(mappable=m, cax=None, ax=ax)
-
+                  cmap="viridis", norm=norm)
+    
+    if has_avg:
+        extent = [grid_x.min(), grid_x.max(), grid_y.min(), grid_y.max()]
+        ax.imshow(img, origin="lower", extent=extent, aspect="equal")
+    
+    # add mask
+    # ax.add_artist(rect)
+    
     ax.set_xlim(grid_x.min(), grid_x.max())
     ax.set_ylim(grid_y.min(), grid_y.max())
 
@@ -106,9 +144,14 @@ if __name__ == '__main__':
     ax.set_xticklabels(ax.get_xticks(), rotation=0,
                        ha="center", fontsize=16)
 
+    # colorbar
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes('right', size='3%', pad=0.05)
+    cbar = fig.colorbar(m, cax=cax, orientation='vertical')
+    cbar.set_label("Optically Derived Flow [m/s]")
+
     fig.tight_layout()
+    plt.savefig(args.output, dpi=120,
+                bbox_inches="tight", pad_inches=0.1)
     plt.show()
-    # break
-    # plt.savefig("flow/{}.png".format(str(i).zfill(6)), dpi=120,
-    #             bbox_inches="tight", pad_inches=0.1)
-    # plt.close()
+    plt.close()

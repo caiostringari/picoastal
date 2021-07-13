@@ -28,7 +28,9 @@ import xarray as xr
 
 import cv2
 
-from scipy.interpolate import griddata
+from scipy.interpolate import (LinearNDInterpolator,
+                               NearestNDInterpolator,
+                               CloughTocher2DInterpolator)
 
 import xarray as xr
 
@@ -76,7 +78,7 @@ else:
     image_dir = os.path.realpath('../../doc/')
     ArgumentParser = gooey.GooeyParser
     gui_decorator = gooey.Gooey(
-        program_name='Timestack Creator',
+        program_name='Dense Optical Flow (Farneback)',
         default_size=[800, 480],
         navigation="TABBED",
         show_sidebar=True,
@@ -189,39 +191,10 @@ def main():
     if not gooey:
         parser = argparse.ArgumentParser()
     else:
-        parser = GooeyParser(description="Dense Optical Flow")
+        parser = GooeyParser(description="Dense Optical Flow (Farneback)")
 
     # arguments
-    if not gooey:
-        parser.add_argument("--input", "-i",
-                            action="store",
-                            dest="input",
-                            default="../../data/boomerang",
-                            required=False,
-                            help="Input folder with images.",)
-
-        parser.add_argument("--camera_matrix", "-mtx",
-                            action="store",
-                            dest="camera_matrix",
-                            default="../../data/flir_tamron_8mm.json",
-                            required=False,
-                            help="Camera Matrix in JSON or pickle format.",)
-
-        parser.add_argument("--ground_control_points", "-gcps", "--gcps",
-                            action="store",
-                            dest="gcps",
-                            required=False,
-                            default="../../data/xyzuv.csv",
-                            help="File with x,y,z,u,v data in csv format.",)
-
-        parser.add_argument("--output", "-o",
-                            action="store",
-                            dest="output",
-                            required=False,
-                            default="timestack.pkl",
-                            help="Timestack in pickle format.")
-
-    else:  # add the same thing but a nicer widget
+    if gooey:
         parser.add_argument("--input", "-i",
                             action="store",
                             dest="input",
@@ -246,21 +219,72 @@ def main():
                             help="File with x,y,z,u,v data in csv format.",
                             widget='FileChooser')
 
+        parser.add_argument("--mask", "-m",
+                    action="store",
+                    dest="mask",
+                    required=False,
+                    default="../../data/flow_mask.geojson",
+                    help="Mask as geojson file. Must be a closed polygon.",
+                    widget='FileChooser')
+
         parser.add_argument("--output", "-o",
                             action="store",
                             dest="output",
                             required=False,
                             default="timestack.pkl",
-                            help="Timestack in pickle format.",
+                            help="Output file name (netcdf).",
                             widget='FileSaver')
 
-        parser.add_argument("--bbox", "-bbox",
+    else:
+        parser.add_argument("--input", "-i",
+                        action="store",
+                        dest="input",
+                        default="../../data/boomerang",
+                        required=False,
+                        help="Input folder with images.",)
+
+        parser.add_argument("--camera_matrix", "-mtx",
                             action="store",
-                            dest="bbox",
+                            dest="camera_matrix",
+                            default="../../data/flir_tamron_8mm.json",
                             required=False,
-                            default="457237.72,6421856.5,500,500",
-                            help="Bounding box to cut the data. Format is "
-                                 "\'bottom_left,bottom_right,dx,dy\'",)
+                            help="Camera Matrix in JSON or pickle format.",)
+
+        parser.add_argument("--ground_control_points", "-gcps", "--gcps",
+                            action="store",
+                            dest="gcps",
+                            required=False,
+                            default="../../data/xyzuv.csv",
+                            help="File with x,y,z,u,v data in csv format.",)
+
+        parser.add_argument("--output", "-o",
+                            action="store",
+                            dest="output",
+                            required=False,
+                            default="flow.nc",
+                            help="Output file name (netcdf).")
+
+        parser.add_argument("--number_of_images", "-N",
+                            action="store",
+                            dest="n_images",
+                            default=-1,
+                            required=False,
+                            help="Number of images to use. Minimum of 2.",)
+
+        parser.add_argument("--mask", "-m",
+                            action="store",
+                            dest="mask",
+                            required=False,
+                            default="../../data/flow_mask.geojson",
+                            help="Mask as geojson file. Must be a closed polygon.",)
+
+        parser.add_argument("--bbox", "-bbox",
+                    action="store",
+                    dest="bbox",
+                    required=False,
+                    default="457237.72,6421856.5,500,500",
+                    help="Bounding box to cut the data. Format is "
+                            "\'bottom_left,bottom_right,dx,dy\'",)
 
         parser.add_argument("--epsg",
                             action="store",
@@ -293,7 +317,7 @@ def main():
                         required=False,
                         default="20200101:000000",
                         help="Start time in YYYYMMDD:HHMMSS format. "
-                             "Default is {20200101:000000}")
+                             "Default is \"20200101:000000\"")
 
     parser.add_argument("--frequency", "-fps",
                         action="store",
@@ -322,6 +346,53 @@ def main():
                         dest="reprojection_error",
                         help="Compute the re-projection errors.")
 
+    parser.add_argument("--pyr_scale",
+                        action="store",
+                        dest="pyr_scale",
+                        default=0.5,
+                        help="Parameter specifying the image scale (<1) to build pyramids for each image; "
+                             "pyr_scale=0.5 means a classical pyramid, where each next layer is twice smaller than "
+                             "the previous one.")
+
+    parser.add_argument("--levels",
+                        action="store",
+                        dest="levels",
+                        default=3,
+                        help="Number of pyramid layers including the initial image; "
+                             "levels=1 means that no extra layers are created and only the original images "
+                             "are used. ")
+
+    parser.add_argument("--win_size",
+                        action="store",
+                        dest="win_size",
+                        default=3,
+                        help="Averaging window size; larger values increase the algorithm "
+                             "robustness to image noise and give more chances for fast motion detection, "
+                             "but yield more blurred motion field.")
+
+    parser.add_argument("--iterations",
+                        action="store",
+                        dest="iterations",
+                        default=10,
+                        help="number of iterations the algorithm does at each pyramid level.")
+
+    parser.add_argument("--poly_n",
+                        action="store",
+                        dest="poly_n",
+                        default=5,
+                        help="Size of the pixel neighborhood used to find polynomial expansion in each pixel; "
+                             "larger values mean that the image will be approximated with smoother surfaces, "
+                             "yielding more robust algorithm and more blurred motion field, "
+                             "typically poly_n =5 or 7.")
+
+    parser.add_argument("--poly_sigma",
+                        action="store",
+                        dest="poly_sigma",
+                        default=1.1,
+                        help="Standard deviation of the Gaussian that is used to smooth derivatives used as a basis "
+                             "for the polynomial expansion; for poly_n=5, you can set poly_sigma=1.1, for poly_n=7, "
+                             "a good value would be poly_sigma=1.5.")
+
     parser.add_argument("--show_results", "-show",
                         action="store_true",
                         dest="show",
@@ -349,6 +420,15 @@ def main():
     images = natsorted(glob(args.input + "/*{}".format(args.image_format)))
     start = datetime.datetime.now()
     print(f"  -- Found {len(images)} images, starting at {start}")
+    if int(args.n_images) == -1:
+        n_images = len(images)
+    else:
+        n_images = int(args.n_images)
+        if n_images == 1:
+            n_images = 2  # need at least 2
+        images = images[0:n_images]
+    
+    print("  -- Processing {} images.".format(n_images))
     first_img = cv2.imread(images[0])
 
     # read gcp coordinates
@@ -372,50 +452,73 @@ def main():
     # image coordinate points
     XY = np.vstack([ximg.flatten(), yimg.flatten()]).T
 
-    # bounding box
+    # get points inside bbox
     bbox = args.bbox.split(",")
     bbox = np.array([float(bbox[0]), float(bbox[1]),
                      float(bbox[2]), float(bbox[3])])
-
-    # mask points outside the bounding box
     rect = patches.Rectangle((bbox[0], bbox[1]), bbox[2], bbox[3],
                              linewidth=2, edgecolor='r', facecolor='none')
-
     insiders = rect.contains_points(XY)
     insiders_idx = np.arange(0, len(XY), 1)[insiders]
     outsiders_idx = np.arange(0, len(XY), 1)[~insiders]
-    iimg, jimg = np.unravel_index(outsiders_idx, ximg.shape)
+    # iimg, jimg = np.unravel_index(outsiders_idx, ximg.shape)
 
     points = XY[insiders_idx, :]
 
     # define grid
     dx = float(args.dx)
     dy = float(args.dy)
+    if dx != dy:
+        dx = min(dx, dy)
+        dy = min(dx, dy)
+        print("   -- warning: can only handle dx=dy. I am using the smallest.")
+
     xlin = np.arange(bbox[0], bbox[0] + bbox[2], dx)
     ylin = np.arange(bbox[1], bbox[1] + bbox[3], dy)
     grid_x, grid_y = np.meshgrid(xlin, ylin)
+
+    # read the mask
+    with open("flow_mask.geojson") as f:
+        data = json.load(f)
+    coords = np.squeeze(np.array(data["features"][0]["geometry"]["coordinates"]))
+    
+    # mask points outside the mask
+    grid_points = np.vstack([grid_x.flatten(), grid_y.flatten()]).T
+    mask = patches.Polygon(coords, linewidth=2, edgecolor='r', facecolor='none')
+    insiders = mask.contains_points(grid_points)
+    outsiders_idx = np.arange(0, len(grid_points), 1)[~insiders]
+    imask, jmask = np.unravel_index(outsiders_idx, grid_x.shape)
 
     # get new camera matrix
     h,  w = first_img.shape[:2]
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(
         mtx, dist, (w, h), 1, (w, h))
 
-    # nvof = cv2.cuda_NvidiaOpticalFlow_1_0.create(frame1.shape[1], frame1.shape[0], 5, False, False, False, 0)
-    # flow = nvof.calc(frame1, frame2, None)
-    # flowUpSampled = nvof.upSampler(flow[0], frame1.shape[1], frame1.shape[0], nvof.getGridSize(), None)
+    # parameter specifying the image scale (<1) to build pyramids for each image;
+    # pyr_scale=0.5 means a classical pyramid, where each next layer is twice smaller than
+    # the previous one.
+    pyr_scale = float(args.pyr_scale)   # 0.5
 
-    # parameter specifying the image scale (<1) to build pyramids for each image; pyr_scale=0.5 means a classical pyramid, where each next layer is twice smaller than the previous one.
-    pyr_scale = 0.5
-    # number of pyramid layers including the initial image; levels=1 means that no extra layers are created and only the original images are used.
-    levels = 3
-    winsize = 3  # averaging window size; larger values increase the algorithm robustness to image noise and give more chances for fast motion detection, but yield more blurred motion field.
+    # number of pyramid layers including the initial image;
+    # levels=1 means that no extra layers are created and only the original images are used.
+    levels = int(args.levels)  # 3
+    
+    # averaging window size; larger values increase the algorithm robustness to image noise
+    #  and give more chances for fast motion detection, but yield more blurred motion field.
+    winsize = int(args.win_size)   #  3
+    
     # number of iterations the algorithm does at each pyramid level.
-    iterations = 5
-    # size of the pixel neighborhood used to find polynomial expansion in each pixel; larger values mean that the image will be approximated with smoother surfaces, yielding more robust algorithm and more blurred motion field, typically poly_n =5 or 7.
-    poly_n = 5
-    # standard deviation of the Gaussian that is used to smooth derivatives used as a basis for the polynomial expansion; for poly_n=5, you can set poly_sigma=1.1, for poly_n=7, a good value would be poly_sigma=1.5.
-    poly_sigma = 1.1
-    flags = 0
+    iterations = int(args.iterations)  # 10
+    
+    # size of the pixel neighborhood used to find polynomial expansion in each pixel;
+    # larger values mean that the image will be approximated with smoother surfaces,
+    # yielding more robust algorithm and more blurred motion field, typically poly_n =5 or 7.
+    poly_n = int(args.poly_n) # 5
+
+    # standard deviation of the Gaussian that is used to smooth derivatives used as a basis
+    # for the polynomial expansion; for poly_n=5, you can set poly_sigma=1.1, for poly_n=7,
+    # a good value would be poly_sigma=1.5.
+    poly_sigma = float(args.poly_sigma)  # 1.1
 
     # < timeloop >
     pbar = tqdm(total=len(images) - 1)
@@ -431,39 +534,48 @@ def main():
     for i in range(len(images) - 1):
 
         # read the image
-        # prev = cv2.cvtColor(cv2.imread(images[i]), cv2.COLOR_BGR2GRAY)
-        # next = cv2.cvtColor(cv2.imread(images[i + 1]), cv2.COLOR_BGR2GRAY)
-        prev = cv2.imread(images[i])
-        next = cv2.imread(images[i + 1])
-
+        prv = cv2.cvtColor(cv2.imread(images[i]), cv2.COLOR_BGR2GRAY)
+        nxt = cv2.cvtColor(cv2.imread(images[i + 1]), cv2.COLOR_BGR2GRAY)
+        
         # undistort
-        prev = cv2.undistort(prev, mtx, dist, None, newcameramtx)
-        next = cv2.undistort(next, mtx, dist, None, newcameramtx)
+        prv = cv2.undistort(prv, mtx, dist, None, newcameramtx)
+        nxt = cv2.undistort(nxt, mtx, dist, None, newcameramtx)
 
         # project
-        prev = griddata(points,
-                        np.vstack([prev[:, :, 0].flatten()[insiders_idx],
-                                   prev[:, :, 1].flatten()[insiders_idx],
-                                   prev[:, :, 2].flatten()[insiders_idx]]).T,
-                        (grid_x, grid_y),
-                        method=args.interp_method).clip(0, 255)
-
-        next = griddata(points,
-                        np.vstack([next[:, :, 0].flatten()[insiders_idx],
-                                   next[:, :, 1].flatten()[insiders_idx],
-                                   next[:, :, 2].flatten()[insiders_idx]]).T,
-                        (grid_x, grid_y),
-                        method=args.interp_method).clip(0, 255)
+        if args.interp_method.lower()  == "linear":
+            fp = LinearNDInterpolator(XY[insiders_idx], prv.flatten()[insiders_idx])
+            fn = LinearNDInterpolator(XY[insiders_idx], nxt.flatten()[insiders_idx])
+        elif args.interp_method.lower()  == "nearest":
+            fp = NearestNDInterpolator(XY[insiders_idx], prv.flatten()[insiders_idx])
+            fn = NearestNDInterpolator(XY[insiders_idx], nxt.flatten()[insiders_idx])
+        elif args.interp_method.lower()  == "ct":
+            fp = CloughTocher2DInterpolator(XY[insiders_idx], prv.flatten()[insiders_idx])
+            fn = CloughTocher2DInterpolator(XY[insiders_idx], nxt.flatten()[insiders_idx])
+        else:
+            raise ValueError("Wrong interpolation methd. Use linear, nearest or ct.")
+        
+        prv = fp(grid_x, grid_y)
+        nxt = fn(grid_x, grid_y)
 
         # compute the flow
-        # uv = cv2.calcOpticalFlowFarneback(prev, next, None, pyr_scale, levels,
-        #                                   winsize, iterations,
-        #                                   poly_n, poly_sigma, flags)
+        uv = cv2.calcOpticalFlowFarneback(prv, nxt, None, pyr_scale, levels,
+                                          winsize, iterations,
+                                          poly_n, poly_sigma, 0)
 
-        uv = cv2.optflow.calcOpticalFlowDenseRLOF(prev, next, None)
+        # convert to m/s
+        # magnitude is how much the pixel moved
+        mag, ang = cv2.cartToPolar(uv[...,0], uv[...,1])
+        displacement = mag * dx  # how much the pixel moved times the grid size
+        speed = displacement / (1/freq)  # dS/dt
 
-        uout[i, :, :] = uv[..., 0]
-        vout[i, :, :] = uv[..., 1]
+        # go back to u,v
+        u, v = cv2.polarToCart(speed, ang)
+
+        u[imask, jmask] = np.ma.masked  # apply mask
+        v[imask, jmask] = np.ma.masked  # apply mask
+
+        uout[i, :, :] = u
+        vout[i, :, :] = v
 
         # time increment
         times[i] = now
@@ -486,7 +598,10 @@ def main():
     encoding = dict(time=dict(units=units, calendar=calendar))
     ds.to_netcdf(args.output, encoding=encoding)
 
+    print("\n Final dataset:")
     print(ds)
+
+    print("\nMy work is done!")
 
 
 if __name__ == '__main__':
