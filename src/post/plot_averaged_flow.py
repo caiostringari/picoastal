@@ -56,6 +56,13 @@ if __name__ == '__main__':
                         required=False,
                         help="Maximun speed value.")
 
+    parser.add_argument("--scale", "-qs",
+                        action="store",
+                        dest="scale",
+                        default=100,
+                        required=False,
+                        help="Scale for the arrows.")
+
     parser.add_argument("--output", "-o",
                         action="store",
                         dest="output",
@@ -74,6 +81,7 @@ if __name__ == '__main__':
 
     CUT = float(args.cut)
     step = int(args.step)
+    scale = float(args.scale)
 
     # try to read the average image
     try:
@@ -126,7 +134,7 @@ if __name__ == '__main__':
                   grid_y[::step, ::step],
                   u_mean[::step, ::step],
                   v_mean[::step, ::step], mag[::step, ::step],
-                  cmap="viridis", norm=norm)
+                  cmap="viridis", norm=norm, scale=scale)
     
     if has_avg:
         extent = [grid_x.min(), grid_x.max(), grid_y.min(), grid_y.max()]
