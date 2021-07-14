@@ -11,7 +11,8 @@ The image below was captured at Boomerang Beach (New South Wales) in early 2019
 year with a very similar similar set-up to the one described in this repository.
 
 ![](doc/boomerang.jpg)
-0
+
+
 # Table of Contents
 
 - [1. Hardware](#1-hardware)
@@ -48,7 +49,8 @@ year with a very similar similar set-up to the one described in this repository.
   * [6.2. Brightest and darkest images](#62-brightest-and-darkest-images)
   * [6.3. Rectification](#63-rectification)
   * [6.4. Timestacks](#64-timestacks)
-  * [6.5 Graphical User Interfaces (GUIs)](#65-graphical-user-interfaces--guis-)
+  * [6.5 Optical Flow](#65-optical-flow)
+  * [6.6 Graphical User Interfaces (GUIs)](#66-graphical-user-interfaces--guis-)
 - [7. Machine Learning](#7-machine-learning)
   * [7.1 People Detector](#71-people-detector)
   * [7.2 Active Wave Breaking Segmentation](#72-active-wave-breaking-segmentation)
@@ -737,7 +739,18 @@ It may not the he most beautiful timestack ever but our code can now provide all
 
 ## 6.5 Optical Flow
 
-Work in progress.
+A experimental script to compute surf zone currents based on [Farneback optical flow](https://docs.opencv.org/3.4/d4/dee/tutorial_optical_flow.html) is also available. This script will loop over all images and compute the `u` and `v` velocity components of the flow. The code will first rectify the images and then calculate the flow in the planar view so that the vectors are correctly oriented. This script is extremely slow and uses a lot of memory, hence not recomende to run on the Raspberry Pi. The output is a netCDF file, so you will need to install `xarray` with `pip install xarray netcdf4`. A mask in `geojson` format is required to mask regions of the image where it does not make sense to compute the flow.
+
+Example:
+
+```bash
+cd ~/picoastal/
+python3 src/post/optical_flow.py -i "path/to/images" -o "flow.nc" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --bbox "xmin,ymin,dx,dy" --mask "mask.geojson"
+```
+
+Use ```python3 optical_flow.py --help``` to list all `CLI` options or call the script with no arguments to start the `GUI`. The results can be displayed with `plot_averaged_flow.py` and for the Boomerang dataset they look like this:
+
+![](doc/flow.png)
 
 
 ## 6.6 Graphical User Interfaces (GUIs)

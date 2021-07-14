@@ -37,10 +37,7 @@ import xarray as xr
 from tqdm import tqdm
 
 from matplotlib import path
-# from matplotlib import colors as mcolors
 import matplotlib.patches as patches
-# import matplotlib.pyplot as plt
-
 
 try:
     import gooey
@@ -49,7 +46,7 @@ except ImportError:
     gooey = None
 
 import warnings
-warnings.simplefilter("ignore", UserWarning)
+# warnings.simplefilter("ignore", UserWarning)
 
 
 # <<< GUI >>>

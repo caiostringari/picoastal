@@ -20,6 +20,8 @@ import numpy as np
 
 from tqdm import tqdm
 
+import cmocean as cmo
+
 from matplotlib import colors as mcolors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -111,7 +113,9 @@ if __name__ == '__main__':
     v_mean[v_mean > CUT] == np.nan
 
     # compute the speed
-    mag = np.sqrt(u_mean**2 + v_mean**2)
+    mag, ang = cv2.cartToPolar(u_mean, v_mean)
+    mag[mag > CUT] = CUT
+    # mag = np.sqrt(u_mean**2 + v_mean**2)
     
     norm = mcolors.Normalize(vmin=0, vmax=CUT, clip=True)
 
@@ -127,10 +131,7 @@ if __name__ == '__main__':
     if has_avg:
         extent = [grid_x.min(), grid_x.max(), grid_y.min(), grid_y.max()]
         ax.imshow(img, origin="lower", extent=extent, aspect="equal")
-    
-    # add mask
-    # ax.add_artist(rect)
-    
+        
     ax.set_xlim(grid_x.min(), grid_x.max())
     ax.set_ylim(grid_y.min(), grid_y.max())
 
@@ -139,19 +140,79 @@ if __name__ == '__main__':
 
     ax.set_xlabel("x [m]", fontsize=16)
     ax.set_ylabel("y [m]", fontsize=16)
+
     ax.set_yticklabels(ax.get_yticks(), rotation=90,
-                       va="center", fontsize=16)
+                    va="center", fontsize=16)
     ax.set_xticklabels(ax.get_xticks(), rotation=0,
-                       ha="center", fontsize=16)
+                    ha="center", fontsize=16)
 
     # colorbar
+    lb = "Optically Derived Speed [m/s]"
     divider = make_axes_locatable(ax)
     cax = divider.append_axes('right', size='3%', pad=0.05)
     cbar = fig.colorbar(m, cax=cax, orientation='vertical')
-    cbar.set_label("Optically Derived Flow [m/s]")
+    cbar.set_label(lb)
 
     fig.tight_layout()
-    plt.savefig(args.output, dpi=120,
+    plt.savefig(args.output, dpi=150,
                 bbox_inches="tight", pad_inches=0.1)
     plt.show()
     plt.close()
+
+
+    # # plot
+    # fig, (ax, bx, cx) = plt.subplots(1, 3, figsize=(12, 7), sharex=True, sharey=True)
+
+    # # plot speed
+    # am = ax.pcolormesh(grid_x, grid_y, mag, cmap=cmo.cm.thermal, norm=norm)
+
+    # # plot direction
+    # bm = bx.pcolormesh(grid_x, grid_y, ang, cmap=cmo.cm.phase, norm=norm)
+
+    # cm = cx.quiver(grid_x[::step, ::step],
+    #               grid_y[::step, ::step],
+    #               u_mean[::step, ::step],
+    #               v_mean[::step, ::step], mag[::step, ::step],
+    #               cmap="viridis", norm=norm)
+    
+    # if has_avg:
+    #     extent = [grid_x.min(), grid_x.max(), grid_y.min(), grid_y.max()]
+    #     ax.imshow(img, origin="lower", extent=extent, aspect="equal")
+    #     bx.imshow(img, origin="lower", extent=extent, aspect="equal")
+    #     cx.imshow(img, origin="lower", extent=extent, aspect="equal")
+
+    
+
+    # for an in [ax, bx, cx]:
+    
+    #     an.set_xlim(grid_x.min(), grid_x.max())
+    #     an.set_ylim(grid_y.min(), grid_y.max())
+
+    #     an.grid()
+    #     ax.set_aspect("equal")
+
+    #     an.set_xlabel("x [m]", fontsize=12)
+    #     an.set_ylabel("y [m]", fontsize=12)
+    
+    #     # an.set_yticklabels(ax.get_yticks(), rotation=0,
+    #                     # va="center", fontsize=10)
+    #     # an.set_xticklabels(ax.get_xticks(), rotation=90,
+    #                     # ha="center", fontsize=10)
+    #     # an.xaxis.ticklabel_format(style="sci")
+    #     an.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+
+    # # colorbar
+    # labels = ["Optically Derived Speed [m/s]",
+    #           "Optically Derived Phase [rad]",
+    #           "Optically Derived Speed [m/s]"]
+    # for an, mn, lb in zip([ax, bx, cx], [am, bm, cm], labels):
+    #     divider = make_axes_locatable(an)
+    #     cax = divider.append_axes('right', size='3%', pad=0.05)
+    #     cbar = fig.colorbar(mn, cax=cax, orientation='vertical')
+    #     cbar.set_label(lb)
+
+    # fig.tight_layout()
+    # plt.savefig(args.output, dpi=150,
+    #             bbox_inches="tight", pad_inches=0.1)
+    # plt.show()
+    # plt.close()
