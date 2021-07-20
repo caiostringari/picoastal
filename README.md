@@ -31,12 +31,12 @@ year with a very similar similar set-up to the one described in this repository.
   * [3.1 FLIR Camera](#31-flir-camera)
   * [3.2 Raspberry Pi HQ Camera](#32-raspberry-pi-hq-camera)
     + [Options](#options)
-  * [3.3. Email Notifications (Optinal)](#33-email-notifications--optinal-)
+  * [3.3. Email Notifications (Optional)](#33-email-notifications--optinal-)
 - [4. Capturing Frames](#4-capturing-frames)
   * [4.1. Displaying the Camera Stream](#41-displaying-the-camera-stream)
     + [FLIR Camera](#flir-camera)
     + [Raspberry Pi HQ Camera](#raspberry-pi-hq-camera)
-    + [Desktop icon (Optinal)](#desktop-icon--optinal-)
+    + [Desktop icon (Optinal)](#desktop-icon--optional-)
   * [4.2. Single Capture Cycle](#42-single-capture-cycle)
   * [4.3. Scheduling Capture Cycles](#43-scheduling-capture-cycles)
   * [4.4. Controlling the Cameras Remotely](#44-controlling-the-cameras-remotely)
@@ -79,7 +79,7 @@ The components of the system are:
 5. Keyboard
 6. Mouse
 7. External storage. In this case a 32Gb USB stick.
-8. [Optional] 4G moden for email notifications.
+8. [Optional] 4G modem for email notifications.
 9. [Optional] Battery bank
 10. [Optional] Solar panel
 
@@ -388,7 +388,7 @@ Exposure and ISO:
 `H.264` options:
 - ```quality```: Set stream quality level. Defaults to 25 (high).
 - ```sei```: Enhanced information for `h.264` encoding.
-- ```sps_timing```:  Frame timmings for `h.264` encoding.
+- ```sps_timing```:  Frame timings for `h.264` encoding.
 
 Post-processing:
 
@@ -397,7 +397,7 @@ Post-processing:
 - ```deviation```: will create the deviation image.
 
 
-## 3.3. Email Notifications (Optinal)
+## 3.3. Email Notifications (Optional)
 
 **Warning**: This will require that you store a ```gmail``` user name and password in
 plain text in your system. I strongly recommend to use an accounted that you
@@ -429,7 +429,7 @@ Add the following contents:
 }
 ```
 
-To save and exit use ```crtl+o``` + ```crtl+x```.
+To save and exit use ```ctrl+o``` + ```ctrl+x```.
 
 Make sure to change gmail's security settings to allow you to send emails using python.
 
@@ -460,7 +460,7 @@ python3 src/flir/stream.py -i config_flir.json > stream.log &
 cd ~/picoastal
 python3 src/rpi/stream.py -i config_rpi.json > stream.log &
 ```
-### Desktop icon (Optinal)
+### Desktop icon (Optional)
 
 It is also useful to create a desktop shortcut to this script so that you don't need to
 use the terminal every time.
@@ -481,7 +481,7 @@ Comment=PiCoastal Stream
 Icon=/home/pi/picoastal/doc/camera.png
 ```
 
-To save and exit use ```crtl+o``` + ```crtl+x```.
+To save and exit use ```ctrl+o``` + ```ctrl+x```.
 
 To use the **`HQ Camera`**, just change `flir` to `rpi` in the commands above.
 
@@ -556,10 +556,10 @@ echo $(<$log)
 
 # call the notification
 script=notify.py
-attachemnt=$(tail -n 1 $log)
-echo $attachemnt
+attachment=$(tail -n 1 $log)
+echo $attachment
 echo "Calling script : "$script
-python3 $workdir$script -cfg $email -log $log -a $attachemnt
+python3 $workdir$script -cfg $email -log $log -a $attachment
 ```
 
 To add a new job to cron, do:
@@ -575,7 +575,7 @@ text editor. I recommend using ```nano```. Add this line to the end of the file:
 0 * * * * bash /home/pi/picoastal/src/flir/cycle_flir.sh
 ```
 
-To save and exit use ```crtl+o``` + ```crtl+x```.
+To save and exit use ```ctrl+o``` + ```ctrl+x```.
 
 ## 4.4. Controlling the Cameras Remotely
 
@@ -739,7 +739,7 @@ It may not the he most beautiful timestack ever but our code can now provide all
 
 ## 6.5 Optical Flow
 
-A experimental script to compute surf zone currents based on [Farneback optical flow](https://docs.opencv.org/3.4/d4/dee/tutorial_optical_flow.html) is also available. This script will loop over all images and compute the `u` and `v` velocity components of the flow. The code will first rectify the images and then calculate the flow in the planar view so that the vectors are correctly oriented. This script is extremely slow and uses a lot of memory, hence not recomende to run on the Raspberry Pi. The output is a netCDF file, so you will need to install `xarray` with `pip install xarray netcdf4`. A mask in `geojson` format is required to mask regions of the image where it does not make sense to compute the flow.
+A experimental script to compute surf zone currents based on [Farneback optical flow](https://docs.opencv.org/3.4/d4/dee/tutorial_optical_flow.html) is also available. This script will loop over all images and compute the `u` and `v` velocity components of the flow. The code will first rectify the images and then calculate the flow in the planar view so that the vectors are correctly oriented. This script is extremely slow and uses a lot of memory, hence not recommended to run on the Raspberry Pi. The output is a netCDF file, so you will need to install `xarray` with `pip install xarray netcdf4`. A mask in `geojson` format is required to mask regions of the image where it does not make sense to compute the flow.
 
 Example:
 
@@ -783,21 +783,17 @@ Two machine learning models are provided here. The first model is a simple peopl
 
 This model is based on [Tensorflow's implementation](https://github.com/tensorflow/examples/tree/master/lite/examples/image_classification/raspberry_pi). To run the script, you will need to manually download one the latest versions of EfficientDetect models:
 
-- [EfficientNet-Lite0](https://tfhub.dev/tensorflow/efficientdet/lite0/detection/1)
-- [EfficientNet-Lite1](https://tfhub.dev/tensorflow/efficientdet/lite1/detection/1)
-- [EfficientNet-Lite2](https://tfhub.dev/tensorflow/efficientdet/lite2/detection/1)
-- [EfficientNet-Lite3](https://tfhub.dev/tensorflow/efficientdet/lite3/detection/1)
-- [EfficientNet-Lite4](https://tfhub.dev/tensorflow/efficientdet/lite4/detection/2)
+- [EfficientNet-Lite0](https://tfhub.dev/tensorflow/efficientdet/lite0/detection/1) | [EfficientNet-Lite1](https://tfhub.dev/tensorflow/efficientdet/lite1/detection/1) | [EfficientNet-Lite2](https://tfhub.dev/tensorflow/efficientdet/lite2/detection/1) | [EfficientNet-Lite3](https://tfhub.dev/tensorflow/efficientdet/lite3/detection/1) | [EfficientNet-Lite4](https://tfhub.dev/tensorflow/efficientdet/lite4/detection/2)
 
 
-Make sur to install tensorflow-lite before running this scripts with `sudo python3 -m pip install --index-url https://google-coral.github.io/py-repo/ tflite_runtime`
+Make sure to install `tensorflow-lite` before running this scripts with `sudo python3 -m pip install --index-url https://google-coral.github.io/py-repo/ tflite_runtime`
 
-These models can detect people with reasonable accuracy but do not expect great results out-of-the-box. In my experience, even the best model (Lite4) misses about 50% of the visible people in the image.
+These models can detect people with reasonable accuracy but do not expect great results out-of-the-box. In my experience, even the best model (`Lite4`) misses about 50% of the visible people in the image.
 
 To run the script, do:
 
 ```bash
-cd ~/picoastal/
+cd ~/picoastal/ml
 python3 offline_people_detector.py --model "lite-model_efficientdet_lite4_detection_default_2.tflite" --model_labels "coco_labels.txt" -i "path/to/images" -o "detections.csv" -threshold 0.3 --display --save_images "path/to/images_with_detections/"
 ```
 
@@ -811,7 +807,7 @@ Using data collected with a very early version of the system equipped the FLIR c
 This model aims to classify each pixel of the image in which waves that are activelly breaking are happening. It was developed during my post-doc at France Energies Marines and is avaliable from [deepwaves](https://github.com/caiostringari/deepwaves). It was trained with deep-water data so the performance with surf zone data is not expected to be very good.
 
 ```bash
-cd ~/picoastal/
+cd ~/picoastal/ml
 python3 offline_wave_breaking_segmention.py --model "seg_xception.h5" -i "path/to/images/" -o "pixels.csv" --save-plots -roi 1250 350 400 150 -N 500 --plot-path "path/to/results"
 ```
 
