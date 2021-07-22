@@ -1,8 +1,7 @@
 """
-Create a timestack from a series of images.
+Compute optical flow.
 
 # SCRIPT   : timestack.py
-# POURPOSE : Create a timestack from a series of images.
 # AUTHOR   : Caio Eadi Stringari
 # DATE     : 29/06/2021
 # VERSION  : 1.0
@@ -563,7 +562,7 @@ def main():
         # magnitude is how much the pixel moved
         mag, ang = cv2.cartToPolar(uv[...,0], uv[...,1])
         displacement = mag * dx  # how much the pixel moved times the grid size
-        speed = displacement / (1/freq)  # dS/dt
+        speed = displacement * freq  # dS/dt -> this gives m/s
 
         # go back to u,v
         u, v = cv2.polarToCart(speed, ang)
