@@ -299,9 +299,13 @@ def main():
 
                     # draw board on image
                     im_with_board = cv2.aruco.drawDetectedCornersCharuco(
-                        frame, ref_corners, ref_ids, (0, 0, 0))
+                        frame, ref_corners, ref_ids, (0, 0, 255))
                     im_with_board = cv2.aruco.drawDetectedMarkers(
                         im_with_board, corners, ids)
+
+                    # save 
+                    cv2.imwrite(args.output + "/" + str(total_images) + ".png",
+                              im_with_board)
 
                     # append
                     all_corners.append(ref_corners)
@@ -320,10 +324,15 @@ def main():
 
             if args.show:
                 rsize = (int(args.stream_width), int(args.stream_height))
-                resized = cv2.resize(im_with_board, rsize,
-                                     interpolation=cv2.INTER_LINEAR)
+                try:
+                    resized = cv2.resize(im_with_board, rsize,
+                                         interpolation=cv2.INTER_LINEAR)
+                except:
+                    resized = cv2.resize(frame, rsize,
+                                         interpolation=cv2.INTER_LINEAR)
+                    
                 cv2.imshow("Camera calibration, pres 'q' to quit.", resized)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                if cv2.waitKey(200) & 0xFF == ord('q'):
                     break
 
         # Destroy any open CV windows
@@ -359,6 +368,7 @@ def main():
     out["chessboard_size"] = board.getChessboardSize()
     out["marker_length"] = board.getMarkerLength()
     out["square_length"] = board.getSquareLength()
+    
     if args.output.lower().endswith("json"):
         with open(args.output, 'w') as fp:
             json.dump(out, fp, cls=NumpyEncoder)
