@@ -9,6 +9,7 @@ Create a timestack from a series of images.
 """
 
 import os
+from posixpath import basename
 import sys
 
 # arguments
@@ -320,6 +321,11 @@ def main():
                         dest="show",
                         help="Show results on screen.")
 
+    parser.add_argument("--save_as_image",
+                        action="store_true",
+                        dest="save_as_image",
+                        help="Save as an image (png).")
+
     args = parser.parse_args()
 
     # read camera matrix and distortion coefficients
@@ -471,6 +477,12 @@ def main():
     with open(args.output, 'wb') as f:
         pickle.dump(out, f)
 
+    # if save as RGB, save
+    if args.save_as_image:
+        bname = os.path.basename(args.output).split(".")[0]
+        plt.imsave(bname + ".png", np.flipud(rgb_stack))
+
+    
     # plot
     if args.show:
         fig, ax = plt.subplots(figsize=(12, 6))

@@ -96,35 +96,36 @@ if __name__ == '__main__':
     y = ds["y"].values
     grid_x, grid_y = np.meshgrid(x, y)
 
-    # instanciate Welford's object
-    Wu = Welford()
-    Wv = Welford()
+    # instanciate Welford's objects
+    Wd = Welford()
+    Wa = Welford()
+    # Wd = Welford()
 
     # compute the average iteratively
     pbar = tqdm(total=len(ds["time"].values))
     for i, time in enumerate(ds["time"].values):
 
-        u = ds.isel(time=i)["u"].values
-        v = ds.isel(time=i)["v"].values
+        a = ds.isel(time=i)["angle"].values
+        d = ds.isel(time=i)["displacement"].values
 
-        Wu.add(u)
-        Wv.add(v)
+        # Wu.add(u)
+        Wa.add(a)
+        Wd.add(d)
 
         pbar.update()
     pbar.close()
 
     # get the average and deviations
-    u_mean = Wu.mean
-    v_mean = Wv.mean
+    a_mean = Wa.mean
+    d_mean = Wd.mean
 
-    u_mean[u_mean > CUT] == np.nan
-    v_mean[v_mean > CUT] == np.nan
+    u_mean = np.cos(a_mean)  # scaled vector component
+    v_mean = np.sin(a_mean)  # scaled vector component
 
-    # compute the speed
-    mag, ang = cv2.cartToPolar(u_mean, v_mean)
-    mag[mag > CUT] = CUT
-    # mag = np.sqrt(u_mean**2 + v_mean**2)
-    
+    d_mean = np.ma.masked_equal(d_mean, 0)
+    v_mean = np.ma.masked_equal(v_mean, 0)
+    u_mean = np.ma.masked_equal(u_mean, 0)
+
     norm = mcolors.Normalize(vmin=0, vmax=CUT, clip=True)
 
     # plot
@@ -133,8 +134,8 @@ if __name__ == '__main__':
     m = ax.quiver(grid_x[::step, ::step],
                   grid_y[::step, ::step],
                   u_mean[::step, ::step],
-                  v_mean[::step, ::step], mag[::step, ::step],
-                  cmap="viridis", norm=norm, scale=scale)
+                  v_mean[::step, ::step], d_mean[::step, ::step],
+                  cmap="magma", norm=norm, scale=scale)
     
     if has_avg:
         extent = [grid_x.min(), grid_x.max(), grid_y.min(), grid_y.max()]
@@ -155,72 +156,14 @@ if __name__ == '__main__':
                     ha="center", fontsize=16)
 
     # colorbar
-    lb = "Optically Derived Speed [m/s]"
+    lb = "Pixel Displacement [m]"
     divider = make_axes_locatable(ax)
     cax = divider.append_axes('right', size='3%', pad=0.05)
     cbar = fig.colorbar(m, cax=cax, orientation='vertical')
-    cbar.set_label(lb)
+    cbar.set_label(lb, fontsize=15)
 
     fig.tight_layout()
-    plt.savefig(args.output, dpi=150,
+    plt.savefig(args.output, dpi=300,
                 bbox_inches="tight", pad_inches=0.1)
     plt.show()
     plt.close()
-
-
-    # # plot
-    # fig, (ax, bx, cx) = plt.subplots(1, 3, figsize=(12, 7), sharex=True, sharey=True)
-
-    # # plot speed
-    # am = ax.pcolormesh(grid_x, grid_y, mag, cmap=cmo.cm.thermal, norm=norm)
-
-    # # plot direction
-    # bm = bx.pcolormesh(grid_x, grid_y, ang, cmap=cmo.cm.phase, norm=norm)
-
-    # cm = cx.quiver(grid_x[::step, ::step],
-    #               grid_y[::step, ::step],
-    #               u_mean[::step, ::step],
-    #               v_mean[::step, ::step], mag[::step, ::step],
-    #               cmap="viridis", norm=norm)
-    
-    # if has_avg:
-    #     extent = [grid_x.min(), grid_x.max(), grid_y.min(), grid_y.max()]
-    #     ax.imshow(img, origin="lower", extent=extent, aspect="equal")
-    #     bx.imshow(img, origin="lower", extent=extent, aspect="equal")
-    #     cx.imshow(img, origin="lower", extent=extent, aspect="equal")
-
-    
-
-    # for an in [ax, bx, cx]:
-    
-    #     an.set_xlim(grid_x.min(), grid_x.max())
-    #     an.set_ylim(grid_y.min(), grid_y.max())
-
-    #     an.grid()
-    #     ax.set_aspect("equal")
-
-    #     an.set_xlabel("x [m]", fontsize=12)
-    #     an.set_ylabel("y [m]", fontsize=12)
-    
-    #     # an.set_yticklabels(ax.get_yticks(), rotation=0,
-    #                     # va="center", fontsize=10)
-    #     # an.set_xticklabels(ax.get_xticks(), rotation=90,
-    #                     # ha="center", fontsize=10)
-    #     # an.xaxis.ticklabel_format(style="sci")
-    #     an.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
-
-    # # colorbar
-    # labels = ["Optically Derived Speed [m/s]",
-    #           "Optically Derived Phase [rad]",
-    #           "Optically Derived Speed [m/s]"]
-    # for an, mn, lb in zip([ax, bx, cx], [am, bm, cm], labels):
-    #     divider = make_axes_locatable(an)
-    #     cax = divider.append_axes('right', size='3%', pad=0.05)
-    #     cbar = fig.colorbar(mn, cax=cax, orientation='vertical')
-    #     cbar.set_label(lb)
-
-    # fig.tight_layout()
-    # plt.savefig(args.output, dpi=150,
-    #             bbox_inches="tight", pad_inches=0.1)
-    # plt.show()
-    # plt.close()

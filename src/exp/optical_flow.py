@@ -275,12 +275,12 @@ def main():
                             help="Mask as geojson file. Must be a closed polygon.",)
 
         parser.add_argument("--bbox", "-bbox",
-                    action="store",
-                    dest="bbox",
-                    required=False,
-                    default="457237.72,6421856.5,500,500",
-                    help="Bounding box to cut the data. Format is "
-                            "\'bottom_left,bottom_right,dx,dy\'",)
+                            action="store",
+                            dest="bbox",
+                            required=False,
+                            default="457237.72,6421856.5,500,500",
+                            help="Bounding box to cut the data. Format is "
+                                 "\'bottom_left,bottom_right,dx,dy\'",)
 
         parser.add_argument("--epsg",
                             action="store",
@@ -474,7 +474,7 @@ def main():
     grid_x, grid_y = np.meshgrid(xlin, ylin)
 
     # read the mask
-    with open("flow_mask.geojson") as f:
+    with open(args.mask) as f:
         data = json.load(f)
     coords = np.squeeze(np.array(data["features"][0]["geometry"]["coordinates"]))
     
@@ -522,6 +522,8 @@ def main():
     # output variables
     uout = np.zeros([len(images) - 1, grid_x.shape[0], grid_y.shape[1]])
     vout = np.zeros([len(images) - 1, grid_x.shape[0], grid_y.shape[1]])
+    mout = np.zeros([len(images) - 1, grid_x.shape[0], grid_y.shape[1]])
+    aout = np.zeros([len(images) - 1, grid_x.shape[0], grid_y.shape[1]])
 
     times = np.array([start_date] * (len(images) - 1))
     now = start_date
@@ -562,16 +564,21 @@ def main():
         # magnitude is how much the pixel moved
         mag, ang = cv2.cartToPolar(uv[...,0], uv[...,1])
         displacement = mag * dx  # how much the pixel moved times the grid size
-        speed = displacement * freq  # dS/dt -> this gives m/s
+        # speed = displacement * freq  # dS/dt -> this gives m/s
 
         # go back to u,v
-        u, v = cv2.polarToCart(speed, ang)
+        u, v = uv[...,0], uv[...,1]
 
         u[imask, jmask] = np.ma.masked  # apply mask
         v[imask, jmask] = np.ma.masked  # apply mask
+        mag[imask, jmask] = np.ma.masked  # apply mask
+        ang[imask, jmask] = np.ma.masked  # apply mask
+
 
         uout[i, :, :] = u
         vout[i, :, :] = v
+        mout[i, :, :] = mag
+        aout[i, :, :] = ang
 
         # time increment
         times[i] = now
@@ -584,6 +591,8 @@ def main():
     # write flow variable
     ds['u'] = (('time', 'x', 'y'), uout)
     ds['v'] = (('time', 'x', 'y'), vout)
+    ds['angle'] = (('time', 'x', 'y'), aout)
+    ds['displacement'] = (('time', 'x', 'y'), mout)
     # write coordinates
     ds.coords['time'] = times
     ds.coords["x"] = xlin
