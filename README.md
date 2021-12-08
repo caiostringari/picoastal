@@ -333,6 +333,7 @@ This camera provides a lot more options, such as ISO and a handy `beach` exposur
 {
     "data": {
         "output": "test/",
+        "format": "jpeg",
         "hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     },
     "capture": {
@@ -357,6 +358,7 @@ This camera provides a lot more options, such as ISO and a handy `beach` exposur
     },
     "post_processing": {
         "extract_frames": true,
+	"only_last_frame": false,
         "notify": true,
         "average": true,
         "deviation": true
@@ -452,13 +454,13 @@ To launch the stream do:
 ### FLIR Camera
 ```bash
 cd ~/picoastal
-python3 src/flir/stream.py -i config_flir.json > stream.log &
+python3 src/flir/stream.py -i src/flir/config_flir.json > stream.log &
 ```
 
 ### Raspberry Pi HQ Camera
 ```bash
 cd ~/picoastal
-python3 src/rpi/stream.py -i config_rpi.json > stream.log &
+python3 src/rpi/stream.py -i src/rpi/config_rpi.json > stream.log &
 ```
 ### Desktop icon (Optional)
 
@@ -572,7 +574,7 @@ If this is your first time using ```crontab```, you will be asked to chose a
 text editor. I recommend using ```nano```. Add this line to the end of the file:
 
 ```
-0 * * * * bash /home/pi/picoastal/src/flir/cycle_flir.sh
+0 * * * * bash /home/pi/picoastal/src/cycle_flir.sh
 ```
 
 To save and exit use ```ctrl+o``` + ```ctrl+x```.
