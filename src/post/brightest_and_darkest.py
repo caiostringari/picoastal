@@ -22,7 +22,7 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
 
-    print("\nComputing average, please wait...\n")
+    print("\nComputing brightest and darkest images, please wait...\n")
 
     # Argument parser
     parser = argparse.ArgumentParser()
