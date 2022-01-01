@@ -14,7 +14,6 @@ year with a very similar similar set-up to the one described in this repository.
 
 
 # Table of Contents
-
 - [Introduction](#introduction)
 - [Table of Contents](#table-of-contents)
 - [1. Hardware](#1-hardware)
@@ -45,6 +44,8 @@ year with a very similar similar set-up to the one described in this repository.
   - [5.1. Generating a ChArUco Board](#51-generating-a-charuco-board)
   - [5.2. Offline Calibration](#52-offline-calibration)
   - [5.3. Online Calibration](#53-online-calibration)
+- [6. Post-processing](#6-post-processing)
+  - [6.1. Average and variance Images](#61-average-and-variance-images)
   - [6.2. Brightest and darkest images](#62-brightest-and-darkest-images)
   - [6.3. Rectification](#63-rectification)
   - [6.4. Timestacks](#64-timestacks)
@@ -60,6 +61,7 @@ year with a very similar similar set-up to the one described in this repository.
   - [7.3. Upside-down Display](#73-upside-down-display)
 - [8. Future improvements](#8-future-improvements)
 - [9. Disclaimer](#9-disclaimer)
+
 
 
 This tutorial assumes that you have some familiarity with the Linux command line
@@ -300,7 +302,7 @@ It's very hard to program FLIR's cameras, so I will only provide basic options h
 ```json
 {
     "data": {
-        "output": "test/",
+        "output": "/mnt/data/",
         "format": "jpeg",
         "hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     },
@@ -316,8 +318,6 @@ It's very hard to program FLIR's cameras, so I will only provide basic options h
     },
     "post_processing": {
         "notify": true,
-        "average": false,
-        "deviation": false
     }
 }
 ```
@@ -332,7 +332,7 @@ This camera provides a lot more options, such as ISO and a handy `beach` exposur
 ```json
 {
     "data": {
-        "output": "test/",
+        "output": "/mnt/data/",
         "format": "jpeg",
         "hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     },
@@ -358,10 +358,8 @@ This camera provides a lot more options, such as ISO and a handy `beach` exposur
     },
     "post_processing": {
         "extract_frames": true,
-	"only_last_frame": false,
+        "only_last_frame": false,
         "notify": true,
-        "average": true,
-        "deviation": true
     }
 }
 ```
@@ -418,15 +416,15 @@ Add the following contents:
 ```json
 {
     "credentials": {
-        "login": "some.login@gmail.com",
-		"destination": "some.email@gmail.com",
-        "password": "somepassword"
+      "login": "some.login@gmail.com",
+      "destination": "some.email@gmail.com",
+      "password": "somepassword"
     },
     "options": {
-        "send_log": true,
-        "send_last_frame": true,
-        "send_average": false,
-        "send_deviation:": false
+      "send_log": true,
+      "send_last_frame": true,
+      "send_average": false,
+      "send_deviation:": false
     }
 }
 ```
@@ -523,40 +521,57 @@ need need within a single capture cycle. One [example](src/flir/cycle_flir.json)
 # create log dir
 mkdir -p "/home/pi/logs/"
 
-# export this variable
+# Export this variable
 export FLIR_GENTL32_CTI=/opt/spinnaker/lib/flir-gentl/FLIR_GenTL.cti
 
-# defines where your code is located
+# Define where your code is located
 workdir="/home/pi/picoastal/src/"
 echo "Current work dir is : "$workdir
 
-# get the current date
+# Get the current date
 date=$(date)
 datestr=$(date +'%Y%m%d_%H%M')
 echo "Current date is : "$date
 
-# your configuration file
+# Your configuration file
 cfg="/home/pi/picoastal/src/flir/config_flir.json"
 echo "Capture config file is : "$cfg
 
-# your email configuration
+# Your email configuration
 email="/home/pi/.gmail"
 echo "Email config file is : "$email
 
-# change to current work directory
+# Change to current work directory
 cd $workdir
 
-# current cycle log file
+# Current cycle log file
 log="/home/pi/logs/picoastal_"$datestr".log"
 echo "Log file is : "$log
 
-# call the capture script
+# Call the capture script
 script=capture.py
 echo "Calling script : "$script
 python3 $workdir/flir/$script -cfg $cfg > $log 2>&1
 echo $(<$log)
 
-# call the notification
+# Optional Post-processing
+
+# statistical images
+capdate=$(date +'%Y%m%d_%H%00')
+python3 $workdir/post/average.py -i "/mnt/data/$capdate/" -o "average_$datestr.png"
+python3 $workdir/post/variance.py -i "/mnt/data/$capdate/" -o "variance_$datestr.png"
+python3 $workdir/post/brightest_and_darkest.py -i "/mnt/data/$capdate/" -b "brightest_$datestr.png" -d "darkest_$datestr.png"
+
+# rectified images
+python3 $workdir/post/rectify.py -i "average_$datestr.png" -o "average_rect_$datestr.tif" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --epsg "12345" --bbox "xmin,ymin,dx,dy"
+python3 $workdir/post/rectify.py -i "variance_$datestr.png" -o "variance_$datestr.png" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --epsg "12345" --bbox "xmin,ymin,dx,dy"
+python3 $workdir/post/rectify.py -i "brightest_$datestr.png" -o "brightest_rect_$datestr.tif" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --epsg "12345" --bbox "xmin,ymin,dx,dy"
+python3 $workdir/post/rectify.py -i "brightest_$datestr.png" -o "brightest_rect_$datestr.png" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --epsg "12345" --bbox "xmin,ymin,dx,dy"
+
+# timestack
+python3 src/post/timestack.py -i "/mnt/data/$capdate/" -o "timestack_$datestr.nc" -gcps "xyzuv.csv" --camera_matrix "camera_matrix.json" --stackline "x1,y1,x2,y2"
+
+# Call the notification
 script=notify.py
 attachment=$(tail -n 1 $log)
 echo $attachment
@@ -620,27 +635,27 @@ To calibrate the FLIR camera on-the-fly, do:
 
 ```bash
 python src/calibration/ChArUco_online_calibration_flir.py - i "config.json" -o "camera_parameters.pkl|json"
-````
+```
 
 To calibrate the Raspberry Pi camera on-the-fly, do:
 
 ```bash
 python src/calibration/ChArUco_online_calibration_rpi.py - i "config.json" -o "camera_parameters.pkl|json"
-````
+```
 
 As usual, there are several parameters that can be set. Use `ChArUco_online_calibration_flir|rpi.py --help` for details. The most import thing for camera calibration is to use the same board parameters as used for `create_ChArUco_board.py`
 
 To investigate the results of a camera calibration do:
 
-```
+```bash
 python src/calibration/show_calib_results.py -i "calibration.pkl" -o "result.png"
 ```
 
-# 6. Post Processing
+# 6. Post-processing
 
 Post processing is usually too computationally expensive to run on the Raspberry Pi. However, some tools will be available here.
 
-## 6.1. Average and Variance Images
+## 6.1. Average and variance Images
 
 To compute an average ([or time exposure](http://www.coastalwiki.org/wiki/Argus_image_types_and_conventions)) image you need to install some extra packages:
 
@@ -861,7 +876,7 @@ To make it permanent, open the system configuration panel and search for `displa
 
 # 8. Future improvements
 
-I am open to suggestions. Keep in mind that I work in this project during my spare time and do no have access to much hardware, specially surveying gear. 
+I am open to suggestions. Keep in mind that I work in this project during my spare time and do no have access to much hardware, specially surveying gear.
 
 # 9. Disclaimer
 
